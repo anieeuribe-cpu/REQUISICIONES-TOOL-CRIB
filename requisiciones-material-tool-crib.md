@@ -2,15 +2,14 @@
 
 ## Objetivo
 
-Digitalizar el formulario de papel existente de requisiciones de material del Tool Crib de la planta, construyendo la solución **completamente dentro de Microsoft 365** (SharePoint + Power Apps + Power Automate).
+Digitalizar el formulario de papel existente de requisiciones de material del Tool Crib de la planta, mediante una **aplicación web construida a la medida** (frontend + backend propios), que use **SharePoint únicamente como base de datos** (listas de SharePoint como almacenamiento de las requisiciones, el catálogo de partes y las listas de configuración), conectándose a través de la API/conector correspondiente.
 
-### Restricciones no negociables
+### Notas sobre la conexión a la base de datos
 
-- Sin hosting externo.
-- Sin registrar apps nuevas en Azure/Entra ID.
-- Sin depender de aprobaciones de IT.
-- Los datos de la empresa no pueden salir del tenant de Microsoft.
-- Solo conectores estándar de SharePoint/Power Apps/Power Automate ya disponibles — **no** usar conectores premium bloqueados (como "HTTP Request"), no requerir registro de aplicaciones en Azure, no depender de permisos que solo un administrador de IT pueda otorgar.
+- Los datos de la empresa (requisiciones, catálogo de partes, aprobadores, tipo de cambio) viven en **listas de SharePoint** dentro del tenant de Microsoft de la empresa, ya que es la opción más simple de conectar con una aplicación externa dentro de Microsoft 365.
+- La aplicación se conecta a esas listas para leer y escribir datos, en vez de tener su propia base de datos independiente.
+- Si durante la construcción se identifica que otra opción (por ejemplo Dataverse) es más fácil de conectar o más adecuada para el volumen de datos (recordando que el catálogo de partes tiene ~84,000 filas), se puede ajustar, siempre y cuando los datos sigan dentro del tenant de Microsoft de la empresa.
+- El envío de notificaciones de aprobación (correo/Teams con botones de Aprobar/Rechazar) puede resolverse desde la propia aplicación (por ejemplo enviando el correo directamente) o apoyándose en Power Automate únicamente para ese flujo de notificación, según convenga en la implementación.
 
 ---
 
@@ -106,3 +105,9 @@ Todos los datos de la requisición, sus renglones, quién aprobó/rechazó y cu�
 - Colores de marca de la empresa: navy `#0f1c3f` + blanco.
 - Logo de la empresa en el encabezado.
 - Consistente con otras apps internas ya existentes.
+
+---
+
+## Arquitectura de la implementación
+
+Ver [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/SETUP-SHAREPOINT.md`](docs/SETUP-SHAREPOINT.md) y [`docs/POWER-AUTOMATE-FLOW.md`](docs/POWER-AUTOMATE-FLOW.md) para el diseño técnico, el esquema de listas de SharePoint y el flujo de aprobación.
