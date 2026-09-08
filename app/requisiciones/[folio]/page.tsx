@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import DevAprobarPanel from "@/components/DevAprobarPanel";
+import OriginBadge from "@/components/OriginBadge";
 import StatusBadge from "@/components/StatusBadge";
 import SurtirButton from "@/components/SurtirButton";
 import { formatMXN, formatUSD } from "@/lib/business";
@@ -48,6 +49,7 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
             <tr className="border-b border-gray-200 text-left text-xs uppercase text-gray-500">
               <th className="py-2 pr-2">Número de parte</th>
               <th className="py-2 pr-2">Descripción</th>
+              <th className="py-2 pr-2">Origen</th>
               <th className="py-2 pr-2">Cantidad</th>
               <th className="py-2 pr-2">Máquina</th>
               <th className="py-2 pr-2">Costo</th>
@@ -58,8 +60,18 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
           <tbody>
             {requisicion.renglones.map((r) => (
               <tr key={r.id} className="border-b border-gray-100">
-                <td className="py-2 pr-2 font-medium text-navy">{r.numeroParte}</td>
+                <td className="py-2 pr-2 font-medium text-navy">
+                  {r.numeroParte}
+                  {r.capturaManual && (
+                    <span className="ml-1.5 inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">
+                      Manual
+                    </span>
+                  )}
+                </td>
                 <td className="py-2 pr-2">{r.descripcion}</td>
+                <td className="py-2 pr-2">
+                  <OriginBadge origen={r.origen} />
+                </td>
                 <td className="py-2 pr-2">{r.cantidad}</td>
                 <td className="py-2 pr-2">{r.maquina}</td>
                 <td className="py-2 pr-2 whitespace-nowrap">

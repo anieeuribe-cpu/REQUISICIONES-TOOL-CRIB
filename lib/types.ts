@@ -5,7 +5,8 @@ export type NivelAprobacion = "Supervisor" | "Superintendente" | "Gerente";
 
 export type EstadoRequisicion = "Pendiente" | "Aprobada" | "Rechazada" | "Surtida";
 
-export type Turno = "1er Turno" | "2do Turno" | "3er Turno";
+/** Turno del solicitante. Opciones sugeridas en la captura: 4, 9, 53, 54 u "Otro" (texto libre). */
+export type Turno = string;
 
 /** Renglon del catálogo de partes (~84,000 filas). */
 export interface ParteCatalogo {
@@ -28,6 +29,8 @@ export interface RenglonRequisicion {
   moneda: Moneda;
   costoUnitario: number; // en la moneda original de la pieza
   localidad: string;
+  /** true cuando el número de parte no estaba en el catálogo y se capturó a mano ("Otro"). */
+  capturaManual: boolean;
 }
 
 export interface Aprobador {

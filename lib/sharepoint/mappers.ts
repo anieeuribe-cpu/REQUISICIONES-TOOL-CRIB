@@ -96,6 +96,7 @@ export interface RenglonFields {
   Moneda: Moneda;
   CostoUnitario: number;
   Localidad: string;
+  CapturaManual: boolean;
 }
 
 export function mapRenglonFields(f: RenglonFields, id: string): RenglonRequisicion {
@@ -108,7 +109,8 @@ export function mapRenglonFields(f: RenglonFields, id: string): RenglonRequisici
     origen: f.Origen,
     moneda: f.Moneda,
     costoUnitario: f.CostoUnitario,
-    localidad: f.Localidad
+    localidad: f.Localidad,
+    capturaManual: f.CapturaManual ?? false
   };
 }
 

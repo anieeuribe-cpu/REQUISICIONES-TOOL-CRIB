@@ -152,7 +152,8 @@ export const sharepointStore: DataStore = {
           Origen: renglon.origen,
           Moneda: renglon.moneda,
           CostoUnitario: renglon.costoUnitario,
-          Localidad: renglon.localidad
+          Localidad: renglon.localidad,
+          CapturaManual: renglon.capturaManual
         }
       });
     }

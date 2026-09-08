@@ -19,7 +19,7 @@ que normalmente ya está disponible para el equipo de la planta.
 |---|---|---|
 | Nombre | Una línea de texto | |
 | NoReloj | Una línea de texto | |
-| Turno | Choice: `1er Turno`, `2do Turno`, `3er Turno` | |
+| Turno | Una línea de texto | En la app se sugieren `4`, `9`, `53`, `54` u "Otro" (texto libre), pero se guarda como texto simple para no bloquear valores nuevos |
 | AreaDepto | Una línea de texto | |
 | Fecha | Fecha (solo fecha) | |
 | SolicitanteCorreo | Una línea de texto | |
@@ -51,6 +51,7 @@ consecutivo sin lógica adicional ni condiciones de carrera.
 | Moneda | Choice: `USD`, `MXN` | |
 | CostoUnitario | Número (2 decimales) | |
 | Localidad | Una línea de texto | |
+| CapturaManual | Sí/No | `Sí` cuando el número de parte no estaba en `CatalogoPartes` y se capturó a mano desde la opción "Otro" — útil para auditar/depurar el catálogo después |
 
 ### `CatalogoPartes` (~84,000 filas)
 
