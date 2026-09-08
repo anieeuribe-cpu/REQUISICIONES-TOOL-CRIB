@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { SesionUsuario } from "@/lib/auth";
 
-const TURNOS = ["1er Turno", "2do Turno", "3er Turno"] as const;
-
 export default function IdentifyGate({
   usuarioInicial,
   children
@@ -88,8 +86,4 @@ export default function IdentifyGate({
       </div>
     </div>
   );
-}
-
-export function turnos(): readonly string[] {
-  return TURNOS;
 }

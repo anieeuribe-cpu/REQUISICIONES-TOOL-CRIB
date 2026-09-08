@@ -11,13 +11,14 @@ const renglonSchema = z.object({
   origen: z.enum(["Americana", "Mexicana"]),
   moneda: z.enum(["USD", "MXN"]),
   costoUnitario: z.number().nonnegative(),
-  localidad: z.string().trim().min(1)
+  localidad: z.string().trim().min(1),
+  capturaManual: z.boolean().default(false)
 });
 
 const nuevaRequisicionSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido."),
   noReloj: z.string().trim().min(1, "El número de reloj es requerido."),
-  turno: z.enum(["1er Turno", "2do Turno", "3er Turno"]),
+  turno: z.string().trim().min(1, "El turno es requerido."),
   areaDepto: z.string().trim().min(1, "El área/departamento es requerido."),
   fecha: z.string().trim().min(1, "La fecha es requerida."),
   renglones: z.array(renglonSchema).min(1, "Agrega al menos un renglón.")
