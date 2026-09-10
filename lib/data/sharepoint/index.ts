@@ -64,15 +64,21 @@ export const sharepointStore: DataStore = {
     const listName = encodeURIComponent(sharepointConfig.listCatalogo());
     // startswith() sobre NumeroParte (columna indexada) evita el límite de
     // 5,000 elementos por vista de SharePoint en una lista de ~84,000 filas.
-    const filter = `startswith(NumeroParte,'${odataEscape(p)}') and Activo eq 1`;
+    // Nota: "Activo" NO se filtra aquí en el OData — en el catálogo real llega
+    // como texto ("TRUE"/"FALSE") en vez de un campo Sí/No real, y un filtro
+    // `eq 1` sobre una columna de texto falla o no devuelve nada. En vez de
+    // exigir que alguien convierta el tipo de columna en SharePoint, se trae
+    // un poco más de margen y se filtra aquí ya normalizado (mapCatalogoFields).
+    const filter = `startswith(NumeroParte,'${odataEscape(p)}')`;
+    const margen = Math.max(limite * 3, 50);
     const query =
       `$select=NumeroParte,Descripcion,Origen,Costo,Localidad,Activo` +
       `&$filter=${encodeURIComponent(filter)}` +
-      `&$orderby=NumeroParte asc&$top=${limite}`;
+      `&$orderby=NumeroParte asc&$top=${margen}`;
     const res = await spGet<{ value: import("@/lib/sharepoint/mappers").CatalogoFields[] }>(
       `/web/lists/getbytitle('${listName}')/items?${query}`
     );
-    return res.value.map(mapCatalogoFields);
+    return res.value.map(mapCatalogoFields).filter((parte) => parte.activo).slice(0, limite);
   },
 
   async obtenerParte(numeroParte) {

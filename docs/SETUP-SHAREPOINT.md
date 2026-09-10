@@ -62,7 +62,7 @@ consecutivo sin lógica adicional ni condiciones de carrera.
 | Origen | Una línea de texto | En el catálogo real de la planta esta columna trae directamente el código de moneda `USD`/`MXN` (no "Americana"/"Mexicana") — la app lo normaliza sola (`lib/sharepoint/mappers.ts#normalizarOrigen`), no hace falta editar el Excel |
 | Costo | Número (2 decimales) | En la moneda que indique `Origen` para ese renglón |
 | Localidad | Una línea de texto | El mismo `NumeroParte` puede repetirse varias veces con distinta `Localidad` (la pieza existe en varias ubicaciones) — es válido, el buscador de la app muestra la localidad de cada opción para distinguirlas |
-| Activo | Sí/No | El asistente "Desde Excel" no ofrece el tipo Sí/No al importar — impórtala como texto (`TRUE`/`FALSE`) y **después** cambia el tipo de la columna a Sí/No desde su configuración; SharePoint convierte los valores automáticamente |
+| Activo | Sí/No o texto | Ideal como Sí/No, pero la app también acepta que quede como texto (`TRUE`/`FALSE`, tal cual la deja el asistente "Desde Excel") — no es necesario convertirla; el filtrado por "activo" lo hace la app, no la consulta a SharePoint |
 
 **Por qué indexar `NumeroParte` es obligatorio:** SharePoint bloquea
 cualquier consulta sobre una lista de más de 5,000 elementos a menos que
@@ -84,8 +84,8 @@ como Tabla de Excel — Ctrl+T — antes de subirlo). En el asistente:
 - Deja las demás columnas con el tipo que detecta automáticamente.
 - Nombra la lista exactamente `CatalogoPartes` (o lo que digas en
   `SP_LIST_CATALOGO`).
-- Después de creada: cambia `Activo` a tipo Sí/No (el asistente la trae
-  como texto) e indexa `NumeroParte` (ver arriba).
+- Después de creada: indexa `NumeroParte` (ver arriba). No hace falta
+  tocar el tipo de `Activo` — puede quedar como texto.
 
 Alternativa por PnP PowerShell (mejor para actualizaciones periódicas
 del catálogo vía script):
