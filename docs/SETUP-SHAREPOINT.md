@@ -57,12 +57,12 @@ consecutivo sin lógica adicional ni condiciones de carrera.
 
 | Columna interna | Tipo | Notas |
 |---|---|---|
-| NumeroParte | Una línea de texto | **Indexar esta columna.** Debe ser el título/clave de búsqueda |
+| NumeroParte | Una línea de texto | **Indexar esta columna.** Debe ser su propia columna de texto — al crear la lista desde Excel, cuida que el asistente no la marque como tipo "Título" (el campo especial reservado de SharePoint), o la app no la va a encontrar |
 | Descripcion | Una línea de texto | |
-| Origen | Choice: `Americana`, `Mexicana` | |
-| Costo | Número (2 decimales) | USD si Origen=Americana, MXN si Origen=Mexicana |
-| Localidad | Una línea de texto | |
-| Activo | Sí/No | Default: Sí |
+| Origen | Una línea de texto | En el catálogo real de la planta esta columna trae directamente el código de moneda `USD`/`MXN` (no "Americana"/"Mexicana") — la app lo normaliza sola (`lib/sharepoint/mappers.ts#normalizarOrigen`), no hace falta editar el Excel |
+| Costo | Número (2 decimales) | En la moneda que indique `Origen` para ese renglón |
+| Localidad | Una línea de texto | El mismo `NumeroParte` puede repetirse varias veces con distinta `Localidad` (la pieza existe en varias ubicaciones) — es válido, el buscador de la app muestra la localidad de cada opción para distinguirlas |
+| Activo | Sí/No | El asistente "Desde Excel" no ofrece el tipo Sí/No al importar — impórtala como texto (`TRUE`/`FALSE`) y **después** cambia el tipo de la columna a Sí/No desde su configuración; SharePoint convierte los valores automáticamente |
 
 **Por qué indexar `NumeroParte` es obligatorio:** SharePoint bloquea
 cualquier consulta sobre una lista de más de 5,000 elementos a menos que
@@ -74,11 +74,21 @@ función de forma eficiente sobre una columna indexada. Sin el índice, la
 búsqueda del catálogo dejará de funcionar en cuanto la lista supere las
 5,000 filas.
 
-**Carga inicial de las ~84,000 filas:** no se cargan a mano. Usar
-PnP PowerShell (`Add-PnPListItem` en lote) o el importador de Excel a
-lista de SharePoint a partir del catálogo real ya existente (ERP/hoja de
-cálculo), respetando los nombres de columna de arriba. Ejemplo con PnP
-PowerShell:
+**Carga inicial de las ~84,000 filas:** no se cargan a mano. La forma más
+simple sin PowerShell es **"+ Nuevo → Lista → Desde Excel"** en
+SharePoint, subiendo el catálogo real completo (debe estar formateado
+como Tabla de Excel — Ctrl+T — antes de subirlo). En el asistente:
+
+- Cambia el tipo de la primera columna de "Título" a "Una sola línea de
+  texto" (si no, `NumeroParte` se fusiona con el campo especial Title).
+- Deja las demás columnas con el tipo que detecta automáticamente.
+- Nombra la lista exactamente `CatalogoPartes` (o lo que digas en
+  `SP_LIST_CATALOGO`).
+- Después de creada: cambia `Activo` a tipo Sí/No (el asistente la trae
+  como texto) e indexa `NumeroParte` (ver arriba).
+
+Alternativa por PnP PowerShell (mejor para actualizaciones periódicas
+del catálogo vía script):
 
 ```powershell
 Connect-PnPOnline -Url "https://empresa.sharepoint.com/sites/ToolCrib" -Interactive
