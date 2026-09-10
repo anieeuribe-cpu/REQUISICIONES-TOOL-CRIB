@@ -70,8 +70,10 @@ export default function PartAutocomplete({
         <ul className="absolute z-10 mt-1 max-h-72 w-80 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
           {cargando && <li className="px-3 py-2 text-xs text-gray-500">Buscando…</li>}
           {!cargando &&
-            opciones.map((parte) => (
-              <li key={parte.numeroParte}>
+            opciones.map((parte, i) => (
+              // La misma pieza puede existir en varias ubicaciones del catálogo real (mismo
+              // numeroParte, distinta localidad) — el índice evita colisiones de key en ese caso.
+              <li key={`${parte.numeroParte}-${parte.localidad}-${i}`}>
                 <button
                   type="button"
                   className="flex w-full items-start justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-navy-50"
@@ -84,6 +86,9 @@ export default function PartAutocomplete({
                   <span className="flex flex-col items-start gap-0.5">
                     <span className="font-semibold text-navy">{parte.numeroParte}</span>
                     <span className="text-xs text-gray-600">{parte.descripcion}</span>
+                    {parte.localidad && (
+                      <span className="text-[11px] text-gray-400">Localidad: {parte.localidad}</span>
+                    )}
                   </span>
                   <OriginBadge origen={parte.origen} />
                 </button>

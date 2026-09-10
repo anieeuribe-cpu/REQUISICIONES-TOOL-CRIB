@@ -18,20 +18,34 @@ import type {
 export interface CatalogoFields {
   NumeroParte: string;
   Descripcion: string;
-  Origen: Origen;
+  /** En el catálogo real esta columna trae el código de moneda ("USD"/"MXN"); también se acepta "Americana"/"Mexicana". */
+  Origen: string;
   Costo: number;
   Localidad: string;
-  Activo: boolean;
+  Activo: boolean | string;
+}
+
+/** Normaliza la columna Origen del catálogo real ("USD"/"MXN") al enum Americana/Mexicana que usa el resto de la app. */
+function normalizarOrigen(valor: string): Origen {
+  const v = valor.trim().toUpperCase();
+  if (v === "MXN" || v === "MEXICANA") return "Mexicana";
+  return "Americana"; // por defecto (incluye "USD" / "AMERICANA")
+}
+
+function normalizarActivo(valor: boolean | string): boolean {
+  if (typeof valor === "boolean") return valor;
+  const v = valor.trim().toUpperCase();
+  return v === "TRUE" || v === "SÍ" || v === "SI" || v === "YES" || v === "1";
 }
 
 export function mapCatalogoFields(f: CatalogoFields): ParteCatalogo {
   return {
     numeroParte: f.NumeroParte,
     descripcion: f.Descripcion,
-    origen: f.Origen,
+    origen: normalizarOrigen(f.Origen),
     costo: f.Costo,
     localidad: f.Localidad,
-    activo: f.Activo
+    activo: normalizarActivo(f.Activo)
   };
 }
 
