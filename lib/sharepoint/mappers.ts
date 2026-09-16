@@ -16,7 +16,8 @@ import type {
 // Nombres internos de columna tal como se crean en docs/SETUP-SHAREPOINT.md.
 
 export interface CatalogoFields {
-  NumeroParte: string;
+  /** El número de parte vive en el campo especial "Title" de SharePoint (ver docs/SETUP-SHAREPOINT.md). */
+  Title: string;
   Descripcion: string;
   /** En el catálogo real esta columna trae el código de moneda ("USD"/"MXN"); también se acepta "Americana"/"Mexicana". */
   Origen: string;
@@ -40,7 +41,7 @@ function normalizarActivo(valor: boolean | string): boolean {
 
 export function mapCatalogoFields(f: CatalogoFields): ParteCatalogo {
   return {
-    numeroParte: f.NumeroParte,
+    numeroParte: f.Title,
     descripcion: f.Descripcion,
     origen: normalizarOrigen(f.Origen),
     costo: f.Costo,

@@ -57,41 +57,54 @@ consecutivo sin lógica adicional ni condiciones de carrera.
 
 | Columna interna | Tipo | Notas |
 |---|---|---|
-| NumeroParte | Una línea de texto | **Indexar esta columna.** Debe ser su propia columna de texto — al crear la lista desde Excel, cuida que el asistente no la marque como tipo "Título" (el campo especial reservado de SharePoint), o la app no la va a encontrar |
+| Title | Una línea de texto | **Este es el número de parte** — es el campo especial "Título" que toda lista de SharePoint trae por default. La app lo consulta por su nombre interno `Title` (no `NumeroParte`); puedes renombrar su título visible a "NumeroParte" en la configuración de la lista para que sea más claro al capturar/ver datos, pero eso no cambia el nombre interno que usa la consulta. **Indexar esta columna.** Si al crear la lista desde Excel alcanzas a elegir el tipo antes de que se fusione con Título, mejor — pero si ya quedó así (como es lo más común con el asistente "Desde Excel"), no hay que rehacer nada, la app ya está armada para leerlo de `Title` |
 | Descripcion | Una línea de texto | |
 | Origen | Una línea de texto | En el catálogo real de la planta esta columna trae directamente el código de moneda `USD`/`MXN` (no "Americana"/"Mexicana") — la app lo normaliza sola (`lib/sharepoint/mappers.ts#normalizarOrigen`), no hace falta editar el Excel |
 | Costo | Número (2 decimales) | En la moneda que indique `Origen` para ese renglón |
 | Localidad | Una línea de texto | El mismo `NumeroParte` puede repetirse varias veces con distinta `Localidad` (la pieza existe en varias ubicaciones) — es válido, el buscador de la app muestra la localidad de cada opción para distinguirlas |
 | Activo | Sí/No o texto | Ideal como Sí/No, pero la app también acepta que quede como texto (`TRUE`/`FALSE`, tal cual la deja el asistente "Desde Excel") — no es necesario convertirla; el filtrado por "activo" lo hace la app, no la consulta a SharePoint |
 
-**Por qué indexar `NumeroParte` es obligatorio:** SharePoint bloquea
-cualquier consulta sobre una lista de más de 5,000 elementos a menos que
-el filtro use como primer predicado una columna indexada. La app
-consulta esta lista con `startswith(NumeroParte,'<prefijo>')`
+**Por qué indexar `Title` es obligatorio:** SharePoint bloquea cualquier
+consulta sobre una lista de más de 5,000 elementos a menos que el
+filtro use como primer predicado una columna indexada. La app consulta
+esta lista con `startswith(Title,'<prefijo>')`
 (`lib/data/sharepoint/index.ts#buscarPartes`) contra la **REST API
 clásica de SharePoint** (no Microsoft Graph), que es la que soporta esta
 función de forma eficiente sobre una columna indexada. Sin el índice, la
 búsqueda del catálogo dejará de funcionar en cuanto la lista supere las
-5,000 filas.
+5,000 filas. Desde **Configuración de la lista → Columnas indizadas →
+Crear índice nuevo**, elige `Title` como columna principal (puede
+aparecer en el selector con el nombre visible que le hayas puesto, p.
+ej. "NumeroParte").
 
 **Carga inicial de las ~84,000 filas:** no se cargan a mano. La forma más
 simple sin PowerShell es **"+ Nuevo → Lista → Desde Excel"** en
 SharePoint, subiendo el catálogo real completo (debe estar formateado
 como Tabla de Excel — Ctrl+T — antes de subirlo). En el asistente:
 
-- Cambia el tipo de la primera columna de "Título" a "Una sola línea de
-  texto" (si no, `NumeroParte` se fusiona con el campo especial Title).
+- La primera columna del Excel normalmente se mapea al tipo "Título"
+  (queda como campo interno `Title`) — está bien dejarlo así, no hace
+  falta forzarlo a "Una sola línea de texto"; la app ya sabe leer el
+  número de parte desde `Title`.
 - Deja las demás columnas con el tipo que detecta automáticamente.
 - Nombra la lista exactamente `CatalogoPartes` (o lo que digas en
   `SP_LIST_CATALOGO`).
-- Después de creada: indexa `NumeroParte` (ver arriba). No hace falta
-  tocar el tipo de `Activo` — puede quedar como texto.
+- Después de creada: en **Configuración de lista → Nombre de columna** puedes
+  renombrar el título visible de `Title` a "NumeroParte" (cosmético, no
+  afecta a la app) e indexar `Title` (ver arriba). No hace falta tocar
+  el tipo de `Activo` — puede quedar como texto.
 
 Alternativa por PnP PowerShell (mejor para actualizaciones periódicas
-del catálogo vía script):
+del catálogo vía script). A diferencia del asistente "Desde Excel", aquí
+sí se crea una columna `NumeroParte` de verdad en vez de usar `Title` —
+si usas este camino en vez del de Excel, cambia también las consultas
+de `lib/data/sharepoint/index.ts#buscarPartes`/`obtenerParte` (y
+`CatalogoFields` en `lib/sharepoint/mappers.ts`) de vuelta a
+`NumeroParte`:
 
 ```powershell
 Connect-PnPOnline -Url "https://empresa.sharepoint.com/sites/ToolCrib" -Interactive
+Add-PnPField -List "CatalogoPartes" -DisplayName "NumeroParte" -InternalName "NumeroParte" -Type Text
 Import-Csv .\catalogo-partes.csv | ForEach-Object {
     Add-PnPListItem -List "CatalogoPartes" -Values @{
         NumeroParte = $_.NumeroParte
