@@ -62,19 +62,24 @@ export const sharepointStore: DataStore = {
     const p = prefijo.trim();
     if (!p) return [];
     const listName = encodeURIComponent(sharepointConfig.listCatalogo());
-    // startswith() sobre NumeroParte (columna indexada) evita el límite de
-    // 5,000 elementos por vista de SharePoint en una lista de ~84,000 filas.
+    // El número de parte vive en el campo especial "Title" de SharePoint (no
+    // en una columna propia llamada "NumeroParte") — pasó porque el asistente
+    // "Desde Excel" mapeó la primera columna del Excel al campo Título antes
+    // de poder cambiarle el tipo. Se indexa y consulta "Title" tal cual;
+    // "NumeroParte" solo es el nombre visible que se le puso a esa columna.
+    // startswith() sobre Title (columna indexada) evita el límite de 5,000
+    // elementos por vista de SharePoint en una lista de ~84,000 filas.
     // Nota: "Activo" NO se filtra aquí en el OData — en el catálogo real llega
     // como texto ("TRUE"/"FALSE") en vez de un campo Sí/No real, y un filtro
     // `eq 1` sobre una columna de texto falla o no devuelve nada. En vez de
     // exigir que alguien convierta el tipo de columna en SharePoint, se trae
     // un poco más de margen y se filtra aquí ya normalizado (mapCatalogoFields).
-    const filter = `startswith(NumeroParte,'${odataEscape(p)}')`;
+    const filter = `startswith(Title,'${odataEscape(p)}')`;
     const margen = Math.max(limite * 3, 50);
     const query =
-      `$select=NumeroParte,Descripcion,Origen,Costo,Localidad,Activo` +
+      `$select=Title,Descripcion,Origen,Costo,Localidad,Activo` +
       `&$filter=${encodeURIComponent(filter)}` +
-      `&$orderby=NumeroParte asc&$top=${margen}`;
+      `&$orderby=Title asc&$top=${margen}`;
     const res = await spGet<{ value: import("@/lib/sharepoint/mappers").CatalogoFields[] }>(
       `/web/lists/getbytitle('${listName}')/items?${query}`
     );
@@ -83,8 +88,8 @@ export const sharepointStore: DataStore = {
 
   async obtenerParte(numeroParte) {
     const listName = encodeURIComponent(sharepointConfig.listCatalogo());
-    const filter = `NumeroParte eq '${odataEscape(numeroParte.trim())}'`;
-    const query = `$select=NumeroParte,Descripcion,Origen,Costo,Localidad,Activo&$filter=${encodeURIComponent(filter)}&$top=1`;
+    const filter = `Title eq '${odataEscape(numeroParte.trim())}'`;
+    const query = `$select=Title,Descripcion,Origen,Costo,Localidad,Activo&$filter=${encodeURIComponent(filter)}&$top=1`;
     const res = await spGet<{ value: import("@/lib/sharepoint/mappers").CatalogoFields[] }>(
       `/web/lists/getbytitle('${listName}')/items?${query}`
     );
