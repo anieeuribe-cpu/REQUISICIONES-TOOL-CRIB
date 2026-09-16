@@ -2,16 +2,19 @@
 
 Plataforma de Requisiciones de Material del Tool Crib de la planta:
 aplicación web a la medida (Next.js + TypeScript) que usa **listas de
-SharePoint como base de datos** y **Power Automate** solo para el flujo
-de aprobación (botones reales de Aprobar/Rechazar desde correo/Teams).
+SharePoint como base de datos**, a las que se conecta a través de **un
+flujo de Power Automate** (sin registrar nada en Azure/Entra ID, sin
+aprobación de IT), y **otro flujo de Power Automate** para el flujo de
+aprobación (botones reales de Aprobar/Rechazar desde correo/Teams).
 
 Ver la especificación funcional completa en
 [`requisiciones-material-tool-crib.md`](requisiciones-material-tool-crib.md)
 y el diseño técnico en [`docs/`](docs/):
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arquitectura general.
-- [`docs/SETUP-SHAREPOINT.md`](docs/SETUP-SHAREPOINT.md) — listas,
-  columnas, índices y registro de aplicación en Entra ID.
+- [`docs/SETUP-SHAREPOINT.md`](docs/SETUP-SHAREPOINT.md) — listas y columnas.
+- [`docs/POWER-AUTOMATE-API-FLOW.md`](docs/POWER-AUTOMATE-API-FLOW.md) —
+  el flujo que conecta la app a las listas de SharePoint.
 - [`docs/POWER-AUTOMATE-FLOW.md`](docs/POWER-AUTOMATE-FLOW.md) — el
   flujo de aprobación paso a paso.
 
@@ -33,12 +36,15 @@ decisión del aprobador — así se puede probar el flujo completo
 ## Conectar a SharePoint real
 
 1. Seguir [`docs/SETUP-SHAREPOINT.md`](docs/SETUP-SHAREPOINT.md) para
-   crear las listas y el registro de aplicación en Entra ID.
-2. Crear el flujo de Power Automate descrito en
+   crear las listas.
+2. Crear el flujo **"ToolCrib-API"** descrito en
+   [`docs/POWER-AUTOMATE-API-FLOW.md`](docs/POWER-AUTOMATE-API-FLOW.md)
+   — es lo que conecta la app a SharePoint, sin Entra ID ni IT.
+3. Crear el flujo de aprobación descrito en
    [`docs/POWER-AUTOMATE-FLOW.md`](docs/POWER-AUTOMATE-FLOW.md).
-3. En `.env.local`, poner `DATA_MODE=sharepoint` y llenar
-   `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`,
-   `SHAREPOINT_SITE_URL` y `SHAREPOINT_SITE_ID`.
+4. En `.env.local` (o en las variables de entorno de Vercel), poner
+   `DATA_MODE=sharepoint` y `POWER_AUTOMATE_FLOW_URL` con la URL del
+   disparador HTTP del flujo del paso 2.
 
 ## Scripts
 

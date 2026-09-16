@@ -1,7 +1,6 @@
 import { nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
 import type { DataStore } from "@/lib/data/store";
-import { sharepointConfig } from "@/lib/sharepoint/config";
-import { graphGet, graphGetAllItems, graphPatch, graphPost } from "@/lib/sharepoint/graphClient";
+import { callFlow } from "@/lib/sharepoint/powerAutomateClient";
 import {
   mapAprobadorFields,
   mapCatalogoFields,
@@ -10,224 +9,120 @@ import {
   mapRolFields,
   mapTipoCambioFields,
   type AprobadorFields,
+  type CatalogoFields,
   type RenglonFields,
   type RequisicionFields,
   type RolFields,
   type TipoCambioFields
 } from "@/lib/sharepoint/mappers";
-import { odataEscape, spGet } from "@/lib/sharepoint/restClient";
 import type { NuevaRequisicionInput, Requisicion } from "@/lib/types";
 
-const siteId = () => sharepointConfig.siteId();
-
-async function listIdCache(): Promise<Map<string, string>> {
-  const g = globalThis as unknown as { __spListIdCache?: Map<string, string> };
-  if (!g.__spListIdCache) {
-    const names = [
-      sharepointConfig.listRequisiciones(),
-      sharepointConfig.listRenglones(),
-      sharepointConfig.listAprobadores(),
-      sharepointConfig.listTipoCambio(),
-      sharepointConfig.listRoles()
-    ];
-    const cache = new Map<string, string>();
-    for (const name of names) {
-      const res = await graphGet<{ id: string }>(
-        `/sites/${siteId()}/lists/${encodeURIComponent(name)}`
-      );
-      cache.set(name, res.id);
-    }
-    g.__spListIdCache = cache;
-  }
-  return g.__spListIdCache;
+/** Forma en que el flujo de Power Automate devuelve una requisición completa (encabezado + renglones). */
+interface RequisicionFlowItem {
+  id: number;
+  fields: RequisicionFields;
+  renglones: Array<{ id: string; fields: RenglonFields }>;
 }
 
-async function listId(listTitle: string): Promise<string> {
-  const cache = await listIdCache();
-  const id = cache.get(listTitle);
-  if (!id) throw new Error(`No se encontró el id de la lista "${listTitle}".`);
-  return id;
-}
-
-async function renglonesDe(requisicionId: number) {
-  const listaId = await listId(sharepointConfig.listRenglones());
-  const items = await graphGetAllItems<RenglonFields>(
-    `/sites/${siteId()}/lists/${listaId}/items?expand=fields&$filter=fields/RequisicionLookupId eq ${requisicionId}`
+function mapRequisicionFlowItem(item: RequisicionFlowItem): Requisicion {
+  return mapRequisicion(
+    String(item.id),
+    item.fields,
+    item.renglones.map((r) => mapRenglonFields(r.fields, r.id))
   );
-  return items.map((item) => mapRenglonFields(item.fields, item.id));
 }
 
 export const sharepointStore: DataStore = {
   async buscarPartes(prefijo, limite = 25) {
     const p = prefijo.trim();
     if (!p) return [];
-    const listName = encodeURIComponent(sharepointConfig.listCatalogo());
-    // El número de parte vive en el campo especial "Title" de SharePoint (no
-    // en una columna propia llamada "NumeroParte") — pasó porque el asistente
-    // "Desde Excel" mapeó la primera columna del Excel al campo Título antes
-    // de poder cambiarle el tipo. Se indexa y consulta "Title" tal cual;
-    // "NumeroParte" solo es el nombre visible que se le puso a esa columna.
-    // startswith() sobre Title (columna indexada) evita el límite de 5,000
-    // elementos por vista de SharePoint en una lista de ~84,000 filas.
-    // Nota: "Activo" NO se filtra aquí en el OData — en el catálogo real llega
-    // como texto ("TRUE"/"FALSE") en vez de un campo Sí/No real, y un filtro
-    // `eq 1` sobre una columna de texto falla o no devuelve nada. En vez de
-    // exigir que alguien convierta el tipo de columna en SharePoint, se trae
-    // un poco más de margen y se filtra aquí ya normalizado (mapCatalogoFields).
-    const filter = `startswith(Title,'${odataEscape(p)}')`;
-    const margen = Math.max(limite * 3, 50);
-    const query =
-      `$select=Title,Descripcion,Origen,Costo,Localidad,Activo` +
-      `&$filter=${encodeURIComponent(filter)}` +
-      `&$orderby=Title asc&$top=${margen}`;
-    const res = await spGet<{ value: import("@/lib/sharepoint/mappers").CatalogoFields[] }>(
-      `/web/lists/getbytitle('${listName}')/items?${query}`
-    );
-    return res.value.map(mapCatalogoFields).filter((parte) => parte.activo).slice(0, limite);
+    const { partes } = await callFlow<{ partes: CatalogoFields[] }>("buscarPartes", { prefijo: p, limite });
+    return partes.map(mapCatalogoFields).filter((parte) => parte.activo).slice(0, limite);
   },
 
   async obtenerParte(numeroParte) {
-    const listName = encodeURIComponent(sharepointConfig.listCatalogo());
-    const filter = `Title eq '${odataEscape(numeroParte.trim())}'`;
-    const query = `$select=Title,Descripcion,Origen,Costo,Localidad,Activo&$filter=${encodeURIComponent(filter)}&$top=1`;
-    const res = await spGet<{ value: import("@/lib/sharepoint/mappers").CatalogoFields[] }>(
-      `/web/lists/getbytitle('${listName}')/items?${query}`
-    );
-    return res.value[0] ? mapCatalogoFields(res.value[0]) : null;
+    const { parte } = await callFlow<{ parte: CatalogoFields | null }>("obtenerParte", {
+      numeroParte: numeroParte.trim()
+    });
+    return parte ? mapCatalogoFields(parte) : null;
   },
 
   async obtenerTipoCambioVigente() {
-    const listaId = await listId(sharepointConfig.listTipoCambio());
-    const items = await graphGetAllItems<TipoCambioFields>(
-      `/sites/${siteId()}/lists/${listaId}/items?expand=fields&$filter=fields/Vigente eq 1`,
-      1
-    );
-    const item = items[0];
-    if (!item) throw new Error("No hay un tipo de cambio marcado como Vigente en la lista TipoCambio.");
-    return mapTipoCambioFields(item.fields);
+    const { tipoCambio } = await callFlow<{ tipoCambio: TipoCambioFields | null }>("tipoCambioVigente", {});
+    if (!tipoCambio) throw new Error("No hay un tipo de cambio marcado como Vigente en la lista TipoCambio.");
+    return mapTipoCambioFields(tipoCambio);
   },
 
   async listarAprobadores() {
-    const listaId = await listId(sharepointConfig.listAprobadores());
-    const items = await graphGetAllItems<AprobadorFields>(
-      `/sites/${siteId()}/lists/${listaId}/items?expand=fields`,
-      100
-    );
-    return items.map((i) => mapAprobadorFields(i.fields));
+    const { aprobadores } = await callFlow<{ aprobadores: AprobadorFields[] }>("aprobadoresListar", {});
+    return aprobadores.map(mapAprobadorFields);
   },
 
   async obtenerAprobador(rol) {
-    const listaId = await listId(sharepointConfig.listAprobadores());
-    const items = await graphGetAllItems<AprobadorFields>(
-      `/sites/${siteId()}/lists/${listaId}/items?expand=fields&$filter=fields/Rol eq '${rol}' and fields/Activo eq 1`,
-      1
-    );
-    return items[0] ? mapAprobadorFields(items[0].fields) : null;
+    const { aprobador } = await callFlow<{ aprobador: AprobadorFields | null }>("aprobadorObtener", { rol });
+    return aprobador ? mapAprobadorFields(aprobador) : null;
   },
 
   async crearRequisicion(input: NuevaRequisicionInput) {
+    // El cálculo de negocio (conversión de moneda, total, nivel de firma) se
+    // queda en la app — igual que en modo mock — para que el flujo de Power
+    // Automate solo tenga que crear los renglones en SharePoint, sin
+    // reimplementar reglas de negocio en fórmulas de Power Automate.
     const tipoCambio = await sharepointStore.obtenerTipoCambioVigente();
     const total = totalUSD(input.renglones, tipoCambio.valorMXNporUSD);
     const nivel = nivelAprobacionPorMonto(total);
     const aprobador = await sharepointStore.obtenerAprobador(nivel);
 
-    const reqListaId = await listId(sharepointConfig.listRequisiciones());
-    const created = await graphPost<{ id: string; fields: RequisicionFields }>(
-      `/sites/${siteId()}/lists/${reqListaId}/items`,
-      {
-        fields: {
-          Nombre: input.nombre,
-          NoReloj: input.noReloj,
-          Turno: input.turno,
-          AreaDepto: input.areaDepto,
-          Fecha: input.fecha,
-          SolicitanteCorreo: input.solicitanteCorreo,
-          TotalUSD: total,
-          NivelAprobacion: nivel,
-          Estado: "Pendiente",
-          AprobadorCorreo: aprobador?.correo ?? ""
-        }
-      }
-    );
-
-    const requisicionId = Number(created.id);
-    const renglonesListaId = await listId(sharepointConfig.listRenglones());
-    for (const renglon of input.renglones) {
-      await graphPost(`/sites/${siteId()}/lists/${renglonesListaId}/items`, {
-        fields: {
-          RequisicionLookupId: requisicionId,
-          Cantidad: renglon.cantidad,
-          NumeroParte: renglon.numeroParte,
-          Descripcion: renglon.descripcion,
-          Maquina: renglon.maquina,
-          Origen: renglon.origen,
-          Moneda: renglon.moneda,
-          CostoUnitario: renglon.costoUnitario,
-          Localidad: renglon.localidad,
-          CapturaManual: renglon.capturaManual
-        }
-      });
-    }
-
-    const requisicion = await sharepointStore.obtenerRequisicion(`REQ-${String(requisicionId).padStart(5, "0")}`);
-    if (!requisicion) throw new Error("La requisición se creó pero no pudo releerse.");
-    // La creación del renglón de encabezado dispara el flujo de Power
-    // Automate (trigger "cuando se crea un elemento" en la lista
-    // Requisiciones) que envía la aprobación — ver docs/POWER-AUTOMATE-FLOW.md.
-    return requisicion;
+    const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem }>("requisicionCrear", {
+      nombre: input.nombre,
+      noReloj: input.noReloj,
+      turno: input.turno,
+      areaDepto: input.areaDepto,
+      fecha: input.fecha,
+      solicitanteCorreo: input.solicitanteCorreo,
+      totalUSD: total,
+      nivelAprobacion: nivel,
+      aprobadorCorreo: aprobador?.correo ?? "",
+      renglones: input.renglones
+    });
+    // La creación del encabezado en SharePoint (dentro del flujo) dispara el
+    // flujo de aprobación por separado — ver docs/POWER-AUTOMATE-FLOW.md.
+    return mapRequisicionFlowItem(requisicion);
   },
 
   async listarRequisiciones(): Promise<Requisicion[]> {
-    const listaId = await listId(sharepointConfig.listRequisiciones());
-    const items = await graphGetAllItems<RequisicionFields>(
-      `/sites/${siteId()}/lists/${listaId}/items?expand=fields&$orderby=fields/Created desc`,
-      1000
-    );
+    const { requisiciones } = await callFlow<{
+      requisiciones: Array<{ id: number; fields: RequisicionFields }>;
+    }>("requisicionesListar", {});
     // Nota: el detalle completo (renglones) solo se carga en obtenerRequisicion,
     // para que el historial sea rápido incluso con miles de requisiciones.
-    return items.map((item) => mapRequisicion(item.id, item.fields, []));
+    return requisiciones.map((item) => mapRequisicion(String(item.id), item.fields, []));
   },
 
   async obtenerRequisicion(folio) {
     const id = Number(folio.replace(/[^0-9]/g, ""));
     if (!id) return null;
-    const listaId = await listId(sharepointConfig.listRequisiciones());
-    try {
-      const item = await graphGet<{ id: string; fields: RequisicionFields }>(
-        `/sites/${siteId()}/lists/${listaId}/items/${id}?expand=fields`
-      );
-      const renglones = await renglonesDe(id);
-      return mapRequisicion(item.id, item.fields, renglones);
-    } catch {
-      return null;
-    }
+    const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem | null }>("requisicionObtener", {
+      id
+    });
+    return requisicion ? mapRequisicionFlowItem(requisicion) : null;
   },
 
   async marcarSurtida(folio, surtidoPor) {
-    const requisicion = await sharepointStore.obtenerRequisicion(folio);
-    if (!requisicion) throw new Error(`Requisición ${folio} no encontrada.`);
-    if (requisicion.estado !== "Aprobada") {
-      throw new Error(
-        `Solo una requisición Aprobada puede marcarse como Surtida (estado actual: ${requisicion.estado}).`
-      );
-    }
-    const listaId = await listId(sharepointConfig.listRequisiciones());
-    await graphPatch(`/sites/${siteId()}/lists/${listaId}/items/${requisicion.id}/fields`, {
-      Estado: "Surtida",
-      SurtidoPor: surtidoPor,
-      FechaSurtido: new Date().toISOString()
+    const id = Number(folio.replace(/[^0-9]/g, ""));
+    if (!id) throw new Error(`Requisición ${folio} no encontrada.`);
+    // La validación de que el estado actual sea "Aprobada" la hace el propio
+    // flujo (evita una condición de carrera entre leer y actualizar); si no
+    // se cumple, el flujo responde con error y callFlow lanza una excepción.
+    const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem }>("requisicionMarcarSurtida", {
+      id,
+      surtidoPor
     });
-    const actualizada = await sharepointStore.obtenerRequisicion(folio);
-    if (!actualizada) throw new Error("No se pudo releer la requisición actualizada.");
-    return actualizada;
+    return mapRequisicionFlowItem(requisicion);
   },
 
   async obtenerRol(correo) {
-    const listaId = await listId(sharepointConfig.listRoles());
-    const items = await graphGetAllItems<RolFields>(
-      `/sites/${siteId()}/lists/${listaId}/items?expand=fields&$filter=fields/Correo eq '${odataEscape(correo)}'`,
-      1
-    );
-    return items[0] ? mapRolFields(items[0].fields) : null;
+    const { rol } = await callFlow<{ rol: RolFields | null }>("rolObtener", { correo });
+    return rol ? mapRolFields(rol) : null;
   }
 };

@@ -1,9 +1,13 @@
 # Configuración de SharePoint
 
 Esta app usa **6 listas** en un sitio de SharePoint dedicado (por ejemplo
-`https://empresa.sharepoint.com/sites/ToolCrib`). Los nombres (Title) por
-defecto están en `.env.example`; si usas otros nombres, ajusta las
-variables `SP_LIST_*`.
+`https://empresa.sharepoint.com/sites/ToolCrib`). Los nombres usados
+aquí (`Requisiciones`, `RequisicionRenglones`, `CatalogoPartes`,
+`Aprobadores`, `TipoCambio`, `RolesUsuarios`) son solo una referencia:
+el flujo de Power Automate ([`POWER-AUTOMATE-API-FLOW.md`](POWER-AUTOMATE-API-FLOW.md))
+elige cada lista directamente en su conector de SharePoint, así que si
+usas otros nombres no hay ninguna variable de entorno que ajustar — solo
+selecciona la lista correcta al construir cada acción del flujo.
 
 ## 1. Crear el sitio
 
@@ -152,38 +156,19 @@ renglón vigente). La app siempre usa el renglón con `Vigente = Sí`.
 | EsToolCrib | Sí/No | Puede crear/consultar requisiciones |
 | Activo | Sí/No | |
 
-## 3. Registro de aplicación en Microsoft Entra ID
+## 3. Conexión de la app: Power Automate (sin Entra ID, sin IT)
 
-La app necesita credenciales propias (autenticación app-only, "client
-credentials") para leer/escribir estas listas desde el backend. Esto es
-un registro de aplicación normal para software interno — lo crea
-cualquier persona con permisos de "App registrations" en Entra ID (no
-necesariamente un administrador global), y **no** implica exponer nada
-fuera del tenant: solo autoriza a esta app a llamar a la API de
-Microsoft 365 de la propia empresa.
-
-1. **Entra ID → App registrations → New registration.** Nombre sugerido:
-   `Tool Crib - Requisiciones`. Tipo de cuenta: solo este directorio.
-2. **Certificates & secrets → New client secret.** Guardar el valor como
-   `AZURE_CLIENT_SECRET` (no se puede volver a ver después).
-3. **API permissions → Add a permission → Microsoft Graph → Application
-   permissions:**
-   - `Sites.Selected` (recomendado: limita el acceso solo al sitio del
-     Tool Crib, no a todo SharePoint) **o** `Sites.ReadWrite.All` si
-     `Sites.Selected` no es viable en el tenant.
-   - Click **Grant admin consent**.
-4. Si se usó `Sites.Selected`, un administrador de SharePoint debe
-   conceder acceso de escritura de esta app específicamente al sitio del
-   Tool Crib (vía la API de permisos de sitio de Graph, una sola vez).
-5. Copiar `Application (client) ID` → `AZURE_CLIENT_ID` y
-   `Directory (tenant) ID` → `AZURE_TENANT_ID`.
-6. Obtener el **Site Id** de Graph para `SHAREPOINT_SITE_ID`:
-   `GET https://graph.microsoft.com/v1.0/sites/empresa.sharepoint.com:/sites/ToolCrib`
-   (con Graph Explorer o cualquier cliente REST autenticado con una
-   cuenta que tenga acceso al sitio).
+La app **no** se conecta directo a Microsoft Graph ni requiere ningún
+registro de aplicación en Entra ID — eso hubiera exigido permisos de
+administrador de IT. En vez de eso, la app llama a un flujo de Power
+Automate (conector estándar de SharePoint, disparador HTTP) que
+cualquier persona con licencia de Microsoft 365 puede crear con su
+propia cuenta. Ver la guía completa y las 10 acciones del flujo en
+[`POWER-AUTOMATE-API-FLOW.md`](POWER-AUTOMATE-API-FLOW.md).
 
 ## 4. Variables de entorno
 
-Copiar `.env.example` a `.env.local` y llenar los valores anteriores,
-más `SHAREPOINT_SITE_URL` y, si se cambiaron los nombres de las listas,
-las variables `SP_LIST_*`. Poner `DATA_MODE=sharepoint`.
+Copiar `.env.example` a `.env.local`, poner `DATA_MODE=sharepoint` y
+`POWER_AUTOMATE_FLOW_URL` con la URL del disparador HTTP del flujo
+`ToolCrib-API` (se obtiene al guardar el flujo — ver
+[`POWER-AUTOMATE-API-FLOW.md`](POWER-AUTOMATE-API-FLOW.md)).
