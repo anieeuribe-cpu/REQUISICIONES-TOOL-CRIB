@@ -85,6 +85,38 @@ Patrón general para una lista (X = mapa de columnas de esa lista):
 3. **Respuesta** — referencia la **salida de "Seleccionar"**, nunca la
    salida cruda de "Obtener elementos"/"Crear elemento".
 
+### ⚠️ Al escribir expresiones a mano, siempre hay que bajar a `?['body']`
+
+**Lección aprendida al construir `obtenerParte`:** cuando insertas la
+salida de una acción con el **selector de contenido dinámico** (el rayo
+⚡ en modo "Contenido dinámico"), Power Automate arma la referencia
+correcta solo. Pero en cuanto necesitas **escribir tú una función a mano**
+en la pestaña `fx` (como `length(...)` o `first(...)`) y ahí refieres a
+otra acción por su nombre, **`outputs('NombreDeLaAccion')` te da el
+objeto completo de esa acción (con `statusCode`, `headers`, etc.), no el
+resultado en sí** — hay que bajar un nivel más:
+
+- Para "Obtener elementos": `outputs('Obtener_elementos_1')?['body/value']`
+- Para "Seleccionar": `outputs('Seleccionar_1')?['body']`
+
+Ejemplos que sí funcionan (probados contra SharePoint real):
+```
+length(outputs('Obtener_elementos_1')?['body/value'])
+first(outputs('Seleccionar_1')?['body'])
+```
+
+Además, dentro del campo "Cuerpo" de una "Respuesta", si vas a envolver
+un cuadrito insertado con una función (ej. `first(...)`), **arma la
+función completa de un jalón en la pestaña `fx`** (no mezcles texto
+escrito tipo `first(` con un cuadrito insertado a mitad — eso rompe el
+JSON). El texto literal `{ "clave":` y `}` sí se escribe a mano
+alrededor del cuadrito de expresión ya armado.
+
+También: al comparar un número escrito a mano en una Condición (ej. el
+`0` de "es mayor que 0"), escríbelo en la pestaña `fx` (no como texto
+plano) para que quede como número y no como texto — si no, sale el
+error "greater expects two parameters of matching types".
+
 Para las listas de las que ya conocemos el esquema completo
 (`CatalogoPartes`: `Title`=número de parte, `Descripcion`, `Origen`,
 `Costo`, `Localidad`, `Activo`) el detalle de abajo ya está probado
@@ -102,15 +134,17 @@ selector de contenido dinámico al agregar la acción.
   `Title`→Title, `Descripcion`→Descripcion, `Origen`→Origen,
   `Costo`→Costo, `Localidad`→Localidad, `Activo`→Activo (cada Valor
   elegido por nombre amigable en el content picker, no escrito a mano).
-- **Respuesta**: `{ "partes": @{outputs('Seleccionar')} }`
+- **Respuesta**: `{ "partes": @{outputs('Seleccionar')} }` (aquí sí
+  funciona sin `?['body']` porque se insertó con el content picker, no
+  escrito a mano — el picker ya resuelve la referencia correcta).
 
-### `obtenerParte`
+### `obtenerParte` ✅ probado contra SharePoint real
 - **Obtener elementos** — Lista: `CatalogoPartes`.
   - Filter Query: `Title eq '@{triggerBody()?['payload']?['numeroParte']}'`
   - Top Count: `1`
 - **Seleccionar** — mismo mapa de 6 columnas que `buscarPartes`, Desde: `value`.
-- **Condición**: ¿`length(outputs('Obtener_elementos')?['body/value'])` es mayor que `0`?
-  - Sí → **Respuesta**: `{ "parte": @{first(outputs('Seleccionar'))} }`
+- **Condición**: `length(outputs('Obtener_elementos_1')?['body/value'])` **es mayor que** `0` (el `0` escrito en la pestaña `fx`, no como texto plano).
+  - Sí → **Respuesta**: `{ "parte":` + `first(outputs('Seleccionar_1')?['body'])` (armado completo en `fx`) + `}`
   - No → **Respuesta**: `{ "parte": null }`
 
 ### `tipoCambioVigente`
