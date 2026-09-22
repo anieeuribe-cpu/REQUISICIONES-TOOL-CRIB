@@ -61,32 +61,56 @@ triggerBody()?['payload']?['prefijo']
 
 ## 3. Las 10 acciones
 
-Para las que ya conocemos el esquema real de columnas (`CatalogoPartes`,
-confirmado: `Title` = número de parte, `Descripcion`, `Origen`, `Costo`,
-`Localidad`, `Activo`) el detalle está completo. Para las demás listas
-(`Requisiciones`, `RequisicionRenglones`, `Aprobadores`, `TipoCambio`,
-`RolesUsuarios`) construimos cada caso en vivo: al agregar la acción
-"Obtener elementos" o "Crear elemento" de SharePoint dentro del flujo,
-**Power Automate te muestra los nombres reales de las columnas de esa
-lista en un formulario** (no hay que adivinar nombres internos como
-pasó con `NumeroParte`/`Title`) — por eso no hace falta repetir aquí el
-ejercicio de "Configuración de lista" para cada una: el propio editor
-de Power Automate ya te lo va a mostrar.
+### ⚠️ Paso "Seleccionar" obligatorio antes de cada "Respuesta"
 
-### `buscarPartes`
+**Lección aprendida al construir `buscarPartes`:** el JSON crudo que
+regresa "Obtener elementos"/"Crear elemento" de SharePoint **no** usa
+los nombres de columna visibles (`Descripcion`, `Origen`, `Costo`...) —
+usa nombres internos genéricos tipo `field_1`, `field_2`, `field_3`...
+(pasa cada vez que una lista se creó con el asistente "Desde Excel", que
+es como se crearon todas las listas de este proyecto). Por eso, **antes
+de cada acción "Respuesta" que entregue datos de una lista, hay que
+agregar una acción "Seleccionar"** (categoría "Operación de datos",
+filtro "Integrado") que traduzca esos nombres raros a los nombres
+limpios que espera la app, usando el **selector de contenido dinámico**
+(que sí resuelve el nombre amigable correcto aunque el interno sea
+`field_1`) — nunca escribas `field_1` a mano en la Respuesta.
+
+Patrón general para una lista (X = mapa de columnas de esa lista):
+1. **Obtener elementos** (o **Crear elemento**) de la lista.
+2. **Seleccionar** — "Desde" = `value` (o el body del elemento creado si
+   es un solo elemento, ver notas por acción) → "Mapa": una fila por
+   columna, Clave = nombre limpio (ej. `Descripcion`), Valor = esa misma
+   columna elegida por su nombre amigable en el content picker.
+3. **Respuesta** — referencia la **salida de "Seleccionar"**, nunca la
+   salida cruda de "Obtener elementos"/"Crear elemento".
+
+Para las listas de las que ya conocemos el esquema completo
+(`CatalogoPartes`: `Title`=número de parte, `Descripcion`, `Origen`,
+`Costo`, `Localidad`, `Activo`) el detalle de abajo ya está probado
+contra SharePoint real. Para las demás (`Requisiciones`,
+`RequisicionRenglones`, `Aprobadores`, `TipoCambio`, `RolesUsuarios`)
+se arma cada caso en vivo, viendo qué nombres amigables te muestra el
+selector de contenido dinámico al agregar la acción.
+
+### `buscarPartes` ✅ probado contra SharePoint real
 - **Obtener elementos** — Lista: `CatalogoPartes`.
   - Filter Query: `startswith(Title,'@{triggerBody()?['payload']?['prefijo']}')`
   - Order By: `Title asc`
   - Top Count: `@{triggerBody()?['payload']?['limite']}`
-- **Respuesta**: `{ "partes": @{outputs('Obtener_elementos')?['body/value']} }`
-  (usa el selector de contenido dinámico para insertar el arreglo completo; no hace falta transformarlo, la app ya sabe leer `Title/Descripcion/Origen/Costo/Localidad/Activo`).
+- **Seleccionar** — Desde: `value` (de "Obtener elementos"). Mapa:
+  `Title`→Title, `Descripcion`→Descripcion, `Origen`→Origen,
+  `Costo`→Costo, `Localidad`→Localidad, `Activo`→Activo (cada Valor
+  elegido por nombre amigable en el content picker, no escrito a mano).
+- **Respuesta**: `{ "partes": @{outputs('Seleccionar')} }`
 
 ### `obtenerParte`
 - **Obtener elementos** — Lista: `CatalogoPartes`.
   - Filter Query: `Title eq '@{triggerBody()?['payload']?['numeroParte']}'`
   - Top Count: `1`
+- **Seleccionar** — mismo mapa de 6 columnas que `buscarPartes`, Desde: `value`.
 - **Condición**: ¿`length(outputs('Obtener_elementos')?['body/value'])` es mayor que `0`?
-  - Sí → **Respuesta**: `{ "parte": @{first(outputs('Obtener_elementos')?['body/value'])} }`
+  - Sí → **Respuesta**: `{ "parte": @{first(outputs('Seleccionar'))} }`
   - No → **Respuesta**: `{ "parte": null }`
 
 ### `tipoCambioVigente`
