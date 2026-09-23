@@ -203,37 +203,85 @@ selector de contenido dinámico al agregar la acción.
   - No → **Respuesta**: `{ "aprobador": null }`
 
 ### `requisicionCrear`
-- **Crear elemento** — Lista: `Requisiciones`. Llenar cada campo con
-  `triggerBody()?['payload']?['nombre']`, `...noReloj`, `...turno`,
-  `...areaDepto`, `...fecha`, `...solicitanteCorreo`, `...totalUSD`,
-  `...nivelAprobacion`, `...aprobadorCorreo`, y `Estado` = `Pendiente`
-  (fijo, no viene del payload).
-- **Aplicar a cada uno** sobre `triggerBody()?['payload']?['renglones']`:
-  - **Crear elemento** — Lista: `RequisicionRenglones`. Columna de
-    búsqueda (lookup) hacia `Requisiciones` = ID del elemento creado en
-    el paso anterior (`outputs('Crear_elemento')?['body/ID']`).
-    Cantidad = `item()?['cantidad']`, NumeroParte = `item()?['numeroParte']`,
-    Descripcion = `item()?['descripcion']`, Maquina = `item()?['maquina']`,
-    Origen = `item()?['origen']`, Moneda = `item()?['moneda']`,
-    CostoUnitario = `item()?['costoUnitario']`, Localidad =
-    `item()?['localidad']`, CapturaManual = `item()?['capturaManual']`.
-- **Obtener elementos** sobre `RequisicionRenglones`, filtrando por la
-  misma columna de búsqueda = ID del encabezado, para regresarlos en la
-  respuesta.
-- **Respuesta**:
-  ```json
-  {
-    "requisicion": {
-      "id": "@{outputs('Crear_elemento')?['body/ID']}",
-      "fields": @{outputs('Crear_elemento')?['body']},
-      "renglones": @{outputs('Obtener_elementos_2')?['body/value']}
-    }
-  }
-  ```
-  (`renglones` debe quedar como una lista de objetos `{id, fields}` —
-  puede hacer falta un **Seleccionar** intermedio para darle esa forma
-  exacta a partir de lo que regresa "Obtener elementos"; lo ajustamos
-  juntos al construir esta rama viendo la salida real).
+
+⚠️ Listas reales del tenant (nombres distintos a los de la sección 2 de
+este documento — confirmados en vivo):
+- Encabezado: **`Requisiciones`**. Columnas reales: `Nombre`, `NoReloj`,
+  `Turno`, **`AreaDpto`** (no `AreaDepto`), `Fecha`, `SolicitanteCorreo`,
+  `SolicitanteNombre` (no la usa la app, se puede dejar vacía),
+  **`Total`** (no `TotalUSD`), `NivelAprobacion`, `Estado`,
+  `AprobadorCorreo`, `AprobadoPor`, `FechaAprobacion`, `MotivoRechazo`,
+  `SurtidoPor`, `FechaSurtido`. También existe una columna `Folio` de
+  texto libre que la app no usa (el folio real se calcula del `ID` —
+  ver `lib/business.ts#formatFolio`); se puede dejar vacía.
+- Renglones: **`Lista RenglonesRequisicion`**. Columnas reales:
+  `RequisicionID` (tipo **Número**, no es Lookup — se guarda ahí el
+  `ID` del encabezado y se filtra `RequisicionID eq <id>`), `Cantidad`,
+  `NumeroParte`, `Descripcion`, `Maquina`, **`Costo`** (no
+  `CostoUnitario`), **`Loc`** (no `Localidad`), `Origen`, `Moneda`,
+  `CapturaManual`.
+
+El código de la app (`lib/sharepoint/mappers.ts`) ya espera los nombres
+"limpios" (`AreaDepto`, `TotalUSD`, `CostoUnitario`, `Localidad`, etc.)
+— la traducción de nombre real → nombre limpio se hace en los pasos
+"Seleccionar" de abajo, igual que se hizo con `Title` en `CatalogoPartes`.
+
+**Pasos** (usar exactamente estos nombres de acción o ajustar las
+referencias `outputs(...)` al nombre real que les ponga el editor):
+
+1. **Crear elemento** (`Requisiciones`) — `Nombre`, `NoReloj`, `Turno`,
+   `AreaDpto`, `Fecha`, `SolicitanteCorreo` desde
+   `triggerBody()?['payload']?['...']`; `Total` desde
+   `triggerBody()?['payload']?['totalUSD']`; `NivelAprobacion` y
+   `AprobadorCorreo` desde el payload; **`Estado`** = `Pendiente`
+   (fijo, texto literal, no viene del payload).
+2. **Obtener elementos** (`Requisiciones`) — Filter Query en `fx`:
+   `concat('ID eq ', outputs('Crear_elemento')?['body/ID'])` — Top
+   Count: `1`. (Se vuelve a leer el elemento recién creado para poder
+   usar el content picker con nombres amigables en el Seleccionar de
+   abajo — el "body" crudo de "Crear elemento" no siempre expone bien
+   los nombres amigables en el picker.)
+3. **Seleccionar** ("header") — Desde: `value` (del paso 2). Mapa (15
+   filas, Clave = nombre limpio / Valor = columna real elegida del
+   picker): `Nombre`→Nombre, `NoReloj`→NoReloj, `Turno`→Turno,
+   `AreaDepto`→AreaDpto, `Fecha`→Fecha, `SolicitanteCorreo`→SolicitanteCorreo,
+   `TotalUSD`→Total, `NivelAprobacion`→NivelAprobacion, `Estado`→Estado,
+   `AprobadorCorreo`→AprobadorCorreo, `AprobadoPor`→AprobadoPor,
+   `FechaAprobacion`→FechaAprobacion, `MotivoRechazo`→MotivoRechazo,
+   `SurtidoPor`→SurtidoPor, `FechaSurtido`→FechaSurtido,
+   `Created`→(la fecha de creación del elemento, aparece en el picker
+   como "Creado"/"Fecha de creación"/"Created").
+4. **Aplicar a cada uno** sobre `triggerBody()?['payload']?['renglones']`:
+   - **Crear elemento** (`Lista RenglonesRequisicion`) — `RequisicionID`
+     = `outputs('Crear_elemento')?['body/ID']`; `Cantidad` =
+     `item()?['cantidad']`; `NumeroParte` = `item()?['numeroParte']`;
+     `Descripcion` = `item()?['descripcion']`; `Maquina` =
+     `item()?['maquina']`; `Origen` = `item()?['origen']`; `Moneda` =
+     `item()?['moneda']`; `Costo` = `item()?['costoUnitario']`; `Loc` =
+     `item()?['localidad']`; `CapturaManual` = `item()?['capturaManual']`.
+5. **Obtener elementos** (`Lista RenglonesRequisicion`) — Filter Query
+   en `fx`: `concat('RequisicionID eq ', outputs('Crear_elemento')?['body/ID'])`.
+6. **Seleccionar** ("renglones") — Desde: `value` (del paso 5). Mapa
+   (10 filas): `ID`→Id (el campo especial "Id" de SharePoint, viene en
+   el picker junto con las demás columnas), `Cantidad`→Cantidad,
+   `NumeroParte`→NumeroParte, `Descripcion`→Descripcion,
+   `Maquina`→Maquina, `Origen`→Origen, `Moneda`→Moneda,
+   `CostoUnitario`→Costo, `Localidad`→Loc, `CapturaManual`→CapturaManual.
+7. **Componer** — Entrada armada así (texto literal + 3 burbujas de
+   expresión/contenido dinámico, cada una insertada de un jalón, nunca
+   mezclada a mitad):
+   texto `{ "id": ` + fx `outputs('Crear_elemento')?['body/ID']` +
+   texto `, "fields": ` + fx `first(outputs('Seleccionar_header')?['body'])`
+   (ajustar el nombre `Seleccionar_header` al nombre real de la acción
+   del paso 3) + texto `, "renglones": ` + contenido dinámico "Salida"
+   del paso 6 (Seleccionar renglones) + texto ` }`.
+8. **Respuesta** — Código `200`. Cuerpo: texto `{ "requisicion": ` +
+   contenido dinámico "Salida" del paso 7 (Componer) + texto ` }`.
+
+Nota: la app espera que cada renglón de la respuesta venga "plano"
+(`{ID, NumeroParte, Descripcion, ...}`, sin anidar en `{id, fields}`) —
+así el Mapa del paso 6 no necesita truco ninguno, es un Seleccionar
+simple como los ya probados.
 
 ### `requisicionesListar`
 - **Obtener elementos** — Lista: `Requisiciones`.

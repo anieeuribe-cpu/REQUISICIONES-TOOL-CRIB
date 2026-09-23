@@ -21,15 +21,12 @@ import type { NuevaRequisicionInput, Requisicion } from "@/lib/types";
 interface RequisicionFlowItem {
   id: number;
   fields: RequisicionFields;
-  renglones: Array<{ id: string; fields: RenglonFields }>;
+  /** Cada renglón viene "plano": su ID de SharePoint junto con el resto de columnas, no anidado. */
+  renglones: RenglonFields[];
 }
 
 function mapRequisicionFlowItem(item: RequisicionFlowItem): Requisicion {
-  return mapRequisicion(
-    String(item.id),
-    item.fields,
-    item.renglones.map((r) => mapRenglonFields(r.fields, r.id))
-  );
+  return mapRequisicion(String(item.id), item.fields, item.renglones.map(mapRenglonFields));
 }
 
 export const sharepointStore: DataStore = {

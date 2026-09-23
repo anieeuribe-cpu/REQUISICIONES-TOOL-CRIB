@@ -102,7 +102,8 @@ export interface RequisicionFields {
 }
 
 export interface RenglonFields {
-  RequisicionLookupId: string | number;
+  /** ID del elemento de lista (campo especial de SharePoint), viene incluido junto con el resto de columnas del renglón. */
+  ID: number;
   Cantidad: number;
   NumeroParte: string;
   Descripcion: string;
@@ -114,9 +115,9 @@ export interface RenglonFields {
   CapturaManual: boolean;
 }
 
-export function mapRenglonFields(f: RenglonFields, id: string): RenglonRequisicion {
+export function mapRenglonFields(f: RenglonFields): RenglonRequisicion {
   return {
-    id: Number(id),
+    id: f.ID,
     numeroParte: f.NumeroParte,
     descripcion: f.Descripcion,
     cantidad: f.Cantidad,
