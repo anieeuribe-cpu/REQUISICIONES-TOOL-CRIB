@@ -166,15 +166,35 @@ selector de contenido dinámico al agregar la acción.
   - No → **Respuesta** (código `200`) — Cuerpo: `{ "tipoCambio": null }`
     (texto literal, sin expresión — no depende de ningún dato).
 
-### `aprobadoresListar`
-- **Obtener elementos** — Lista: `Aprobadores`.
-- **Respuesta**: `{ "aprobadores": @{outputs('Obtener_elementos')?['body/value']} }`
+### `aprobadoresListar` ✅ probado contra SharePoint real
+- Lista real: **`Lista Aprobadores`** (así se llama en el sitio, con
+  "Lista" incluido en el nombre). Se creó con el asistente "Desde
+  Excel", así que el nombre completo del aprobador quedó fusionado con
+  el campo especial "Título" (mismo patrón que `Title` en
+  `CatalogoPartes`) — no tiene columna `Activo`.
+- **Obtener elementos** — Lista: `Lista Aprobadores`. Sin Filter Query
+  (trae todos). Puede salir una advertencia (no error) de "sin Top
+  Count" en el comprobador de flujo — se puede ignorar, la lista es
+  chica.
+- **Seleccionar** — Desde: `value`. Mapa (3 filas): `Rol`→Rol,
+  `Correo`→Correo, `NombreCompleto`→Título.
+- **Respuesta**: `{ "aprobadores": @{outputs('Seleccionar_3')} }`
+  (salida de Seleccionar insertada con el content picker, patrón
+  `buscarPartes`).
 
 ### `aprobadorObtener`
-- **Obtener elementos** — Lista: `Aprobadores`.
-  - Filter Query: `Rol eq '@{triggerBody()?['payload']?['rol']}'` (agregar `and Activo eq 1` si esa columna es un Sí/No real).
+- Lista: `Lista Aprobadores` (mismo mapa de 3 columnas que
+  `aprobadoresListar`).
+- **Obtener elementos** — Filter Query:
+  `Rol eq '@{triggerBody()?['payload']?['rol']}'` (sin filtro de Activo,
+  esa columna no existe en esta lista).
   - Top Count: `1`
-- **Respuesta**: igual patrón que `obtenerParte` (con Condición para `null` si no hay resultados).
+- **Seleccionar** — mismo mapa de 3 columnas (Rol, Correo,
+  NombreCompleto→Título), Desde: `value`.
+- **Condición**: `length(outputs('Obtener_elementos_X')?['body/value'])`
+  (armado en `fx`) **es mayor que** `0` (el `0` en `fx`).
+  - Sí → **Respuesta**: `{ "aprobador":` + `first(outputs('Seleccionar_X')?['body'])` (armado completo en `fx`) + `}`
+  - No → **Respuesta**: `{ "aprobador": null }`
 
 ### `requisicionCrear`
 - **Crear elemento** — Lista: `Requisiciones`. Llenar cada campo con
