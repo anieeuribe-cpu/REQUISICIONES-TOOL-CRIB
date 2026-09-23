@@ -182,18 +182,24 @@ selector de contenido dinámico al agregar la acción.
   (salida de Seleccionar insertada con el content picker, patrón
   `buscarPartes`).
 
-### `aprobadorObtener`
+### `aprobadorObtener` ✅ probado contra SharePoint real
 - Lista: `Lista Aprobadores` (mismo mapa de 3 columnas que
   `aprobadoresListar`).
-- **Obtener elementos** — Filter Query:
-  `Rol eq '@{triggerBody()?['payload']?['rol']}'` (sin filtro de Activo,
-  esa columna no existe en esta lista).
-  - Top Count: `1`
+- **Obtener elementos** — Filter Query armado en `fx` con `concat` (más
+  seguro que escribir `@{...}` a mano dentro del filtro, evita líos de
+  comillas):
+  ```
+  concat('Rol eq ''', triggerBody()?['payload']?['rol'], '''')
+  ```
+  - Top Count: `1` (⚠️ va en el campo **"Primeros puestos"**, no en
+    "Ordenar por" — son campos separados en "Parámetros avanzados", fácil
+    confundirlos).
 - **Seleccionar** — mismo mapa de 3 columnas (Rol, Correo,
   NombreCompleto→Título), Desde: `value`.
-- **Condición**: `length(outputs('Obtener_elementos_X')?['body/value'])`
-  (armado en `fx`) **es mayor que** `0` (el `0` en `fx`).
-  - Sí → **Respuesta**: `{ "aprobador":` + `first(outputs('Seleccionar_X')?['body'])` (armado completo en `fx`) + `}`
+- **Condición**: `length(outputs('Obtener_elementos_4')?['body/value'])`
+  (armado en `fx`) **es mayor que** `0` (el `0` en `fx`). La fila extra
+  auto-generada se llenó con `1 = 1` (workaround de siempre).
+  - Sí → **Respuesta**: `{ "aprobador":` + `first(outputs('Seleccionar_4')?['body'])` (armado completo en `fx`) + `}`
   - No → **Respuesta**: `{ "aprobador": null }`
 
 ### `requisicionCrear`
