@@ -147,11 +147,24 @@ selector de contenido dinámico al agregar la acción.
   - Sí → **Respuesta**: `{ "parte":` + `first(outputs('Seleccionar_1')?['body'])` (armado completo en `fx`) + `}`
   - No → **Respuesta**: `{ "parte": null }`
 
-### `tipoCambioVigente`
-- **Obtener elementos** — Lista: `TipoCambio`.
-  - Filter Query: el campo que indique "vigente" (revisar nombre real en el editor; en `docs/SETUP-SHAREPOINT.md` se documentó como `Vigente eq 1`, ajustar si el tipo de columna real es texto).
+### `tipoCambioVigente` ✅ probado contra SharePoint real
+- **Obtener elementos** — Lista: `TipoCambio` (lista creada a mano, sin
+  el asistente "Desde Excel", así que sus columnas ya tienen nombres
+  internos limpios: `Fecha`, `ValorMXNporUSD`, `Vigente` de verdad).
+  - Filter Query: `Vigente eq 1`
   - Top Count: `1`
-- **Respuesta**: `{ "tipoCambio": @{if(equals(length(outputs('Obtener_elementos')?['body/value']), 0), null, first(outputs('Obtener_elementos')?['body/value']))} }`
+- **Seleccionar** — Desde: `value` (de "Obtener elementos"). Mapa (3
+  filas): `Fecha`→Fecha, `ValorMXNporUSD`→ValorMXNporUSD,
+  `Vigente`→Vigente (cada Valor elegido por nombre amigable en el
+  content picker).
+- **Condición**: `length(outputs('Obtener_elementos_2')?['body/value'])`
+  (armado en `fx`) **es mayor que** `0` (el `0` también escrito en `fx`).
+  - Sí → **Respuesta** (código `200`) — Cuerpo armado así: texto literal
+    `{ "tipoCambio":` + expresión completa en `fx`
+    `first(outputs('Seleccionar_2')?['body'])` (una sola burbuja, nunca
+    mezclada con texto a mitad) + texto literal `}`.
+  - No → **Respuesta** (código `200`) — Cuerpo: `{ "tipoCambio": null }`
+    (texto literal, sin expresión — no depende de ningún dato).
 
 ### `aprobadoresListar`
 - **Obtener elementos** — Lista: `Aprobadores`.
