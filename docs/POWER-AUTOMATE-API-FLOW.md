@@ -401,11 +401,30 @@ confirma que no tengan comas ni espacios de más. Si corriges una
 opción ya usada en algún elemento, ese elemento no se actualiza solo:
 hay que volver a seleccionar el valor corregido en esa fila.
 
-### `rolObtener`
-- **Obtener elementos** — Lista: `RolesUsuarios`.
-  - Filter Query: `Correo eq '@{triggerBody()?['payload']?['correo']}'`
-  - Top Count: `1`
-- **Respuesta**: mismo patrón que `obtenerParte`.
+### `rolObtener` ✅ probado contra SharePoint real
+- Lista `RolesUsuarios` creada a mano (sin asistente de Excel): `Correo`
+  (texto), `EsAlmacen`/`EsToolCrib`/`Activo` (Sí/No) — al ser columnas
+  Sí/No reales (no Elección), el picker regresa el booleano directo,
+  sin necesidad de la opción " Value".
+- **Obtener elementos** — Filter Query en `fx`:
+  `concat('Correo eq ''', triggerBody()?['payload']?['correo'], '''')`
+  — Top Count: `1`.
+- **Seleccionar** — Desde: `value`. Mapa (4 filas, directo):
+  `Correo`→Correo, `EsAlmacen`→EsAlmacen, `EsToolCrib`→EsToolCrib,
+  `Activo`→Activo.
+- **Condición**: `length(outputs('Obtener_elementos_13')?['body/value'])`
+  **es mayor que** `0`.
+  - Sí → **Respuesta**: `{ "rol":` + `first(outputs('Seleccionar_13')?['body'])` (armado en `fx`) + `}`
+  - No → **Respuesta**: `{ "rol": null }`
+
+## 5. Las 10 acciones — todas probadas ✅
+
+`buscarPartes`, `obtenerParte`, `tipoCambioVigente`, `aprobadoresListar`,
+`aprobadorObtener`, `requisicionCrear`, `requisicionesListar`,
+`requisicionObtener`, `requisicionMarcarSurtida`, `rolObtener` — las 10
+quedaron construidas y confirmadas end-to-end contra las listas reales
+de SharePoint del tenant. El flujo `ToolCrib-API` ya está listo para
+conectar la app (ver sección 4).
 
 ## 4. Conectar la app
 
