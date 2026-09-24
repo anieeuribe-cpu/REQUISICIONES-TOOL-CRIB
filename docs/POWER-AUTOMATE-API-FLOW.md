@@ -312,10 +312,20 @@ Nota: la app espera que cada renglón de la respuesta venga "plano"
 por eso el Mapa del paso 6 es un Seleccionar simple, sin ningún truco.
 
 ### `requisicionesListar`
-- **Obtener elementos** — Lista: `Requisiciones`.
-  - Order By: por fecha de creación, descendente.
-  - Top Count: `1000` (o más, según el volumen esperado).
-- **Respuesta**: `{ "requisiciones": @{outputs('Obtener_elementos')?['body/value']} }`
+- **Obtener elementos** — Lista: `Requisiciones`. Sin Filter Query (trae
+  todas). Top Count: `500` (o el volumen esperado).
+- **Seleccionar** — Desde: `value`. Mapa (17 filas — las mismas 16 de
+  `requisicionCrear` paso 3, **más** `ID`→Id): recuerda usar **" Value"**
+  en `Turno`, `NivelAprobacion` y `Estado` (columnas Elección).
+- **Respuesta**: `{ "requisiciones": ` + contenido dinámico "Salida" del
+  Seleccionar + ` }` (una sola burbuja, patrón `buscarPartes`/`aprobadoresListar`).
+
+Nota: cada requisición viene "plana" (`ID` + columnas, sin anidar en
+`{id, fields}`) — la app arma el objeto `Requisicion` a partir de eso
+(`lib/data/sharepoint/index.ts#listarRequisiciones`), mismo patrón que
+los renglones de `requisicionCrear`. El detalle completo (renglones) no
+se carga aquí, solo en `requisicionObtener`, para que el historial sea
+rápido.
 
 ### `requisicionObtener`
 - **Obtener elemento** — Lista: `Requisiciones`. Id: `triggerBody()?['payload']?['id']`.

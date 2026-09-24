@@ -88,12 +88,15 @@ export const sharepointStore: DataStore = {
   },
 
   async listarRequisiciones(): Promise<Requisicion[]> {
+    // Cada requisición viene "plana" (ID + columnas), igual patrón que los
+    // renglones en crearRequisicion — evita anidar {id, fields} a mano en
+    // Power Automate para una lista completa (no solo un elemento).
     const { requisiciones } = await callFlow<{
-      requisiciones: Array<{ id: number; fields: RequisicionFields }>;
+      requisiciones: Array<RequisicionFields & { ID: number }>;
     }>("requisicionesListar", {});
     // Nota: el detalle completo (renglones) solo se carga en obtenerRequisicion,
     // para que el historial sea rápido incluso con miles de requisiciones.
-    return requisiciones.map((item) => mapRequisicion(String(item.id), item.fields, []));
+    return requisiciones.map((item) => mapRequisicion(String(item.ID), item, []));
   },
 
   async obtenerRequisicion(folio) {
