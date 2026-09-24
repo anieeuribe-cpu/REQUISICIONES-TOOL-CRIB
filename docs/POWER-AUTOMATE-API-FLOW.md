@@ -311,7 +311,7 @@ Nota: la app espera que cada renglón de la respuesta venga "plano"
 (`{ID, NumeroParte, Descripcion, ...}`, sin anidar en `{id, fields}`) —
 por eso el Mapa del paso 6 es un Seleccionar simple, sin ningún truco.
 
-### `requisicionesListar`
+### `requisicionesListar` ✅ probado contra SharePoint real
 - **Obtener elementos** — Lista: `Requisiciones`. Sin Filter Query (trae
   todas). Top Count: `500` (o el volumen esperado).
 - **Seleccionar** — Desde: `value`. Mapa (17 filas — las mismas 16 de
