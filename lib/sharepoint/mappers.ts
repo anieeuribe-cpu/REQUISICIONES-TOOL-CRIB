@@ -45,7 +45,9 @@ export function mapCatalogoFields(f: CatalogoFields): ParteCatalogo {
     descripcion: f.Descripcion,
     origen: normalizarOrigen(f.Origen),
     costo: f.Costo,
-    localidad: f.Localidad,
+    // En el catálogo real varias piezas no tienen Localidad capturada; SharePoint
+    // regresa null (no cadena vacía) en ese caso.
+    localidad: f.Localidad ?? "",
     activo: normalizarActivo(f.Activo)
   };
 }

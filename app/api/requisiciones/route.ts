@@ -7,11 +7,13 @@ const renglonSchema = z.object({
   numeroParte: z.string().trim().min(1, "Falta el número de parte de un renglón."),
   descripcion: z.string().trim().min(1),
   cantidad: z.number().positive("La cantidad debe ser mayor a cero."),
-  maquina: z.string().trim().min(1, "Falta la máquina de un renglón."),
+  // Máquina y Localidad son informativas: el catálogo real no siempre trae
+  // Localidad capturada, y Máquina la llena el usuario solo si aplica.
+  maquina: z.string().nullish().transform((v) => v?.trim() ?? ""),
   origen: z.enum(["Americana", "Mexicana"]),
   moneda: z.enum(["USD", "MXN"]),
   costoUnitario: z.number().nonnegative(),
-  localidad: z.string().trim().min(1),
+  localidad: z.string().nullish().transform((v) => v?.trim() ?? ""),
   capturaManual: z.boolean().default(false)
 });
 
