@@ -67,7 +67,7 @@ export default function PartAutocomplete({
         autoComplete="off"
       />
       {mostrarDropdown && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-80 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-96 w-96 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
           {cargando && <li className="px-3 py-2 text-xs text-gray-500">Buscando…</li>}
           {!cargando &&
             opciones.map((parte, i) => (
