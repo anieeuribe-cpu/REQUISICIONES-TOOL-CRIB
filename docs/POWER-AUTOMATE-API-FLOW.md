@@ -357,15 +357,49 @@ el mismo mapa de 16/10 columnas:
    - **False**: **Respuesta** (código `200`) — Cuerpo literal:
      `{ "requisicion": null }`.
 
-### `requisicionMarcarSurtida`
-- **Obtener elemento** — Lista: `Requisiciones`. Id: `triggerBody()?['payload']?['id']`.
-- **Condición**: ¿`Estado` del elemento obtenido es igual a `Aprobada`?
-  - Sí → **Actualizar elemento**: `Estado` = `Surtida`, `SurtidoPor` =
-    `triggerBody()?['payload']?['surtidoPor']`, `FechaSurtido` =
-    `utcNow()`. Luego **Obtener elemento** de nuevo (para traer los
-    valores actualizados) y **Respuesta** con `{requisicion:{...}}`.
-  - No → **Respuesta** con código de estado `400` y cuerpo
-    `{ "error": "Solo una requisición Aprobada puede marcarse como Surtida." }`.
+### `requisicionMarcarSurtida` ✅ probado contra SharePoint real
+
+1. **Obtener elementos** ("header") — Lista: `Requisiciones`. Filter
+   Query en `fx`: `concat('ID eq ', triggerBody()?['payload']?['id'])`
+   — Top Count: `1`.
+2. **Seleccionar** — Desde: `value` (del paso 1). Mismas 16 filas de
+   siempre (con **" Value"** en Turno, NivelAprobacion, Estado).
+3. **Condición**: `first(outputs('Seleccionar_N')?['body'])?['Estado']`
+   (nombre real del Seleccionar del paso 2, armado en `fx`) **es igual
+   que** `Aprobada` (texto literal, sin fx, en el campo derecho).
+   - **True**:
+     4. **Actualizar elemento** — Lista: `Requisiciones`. Identificador:
+        `fx` → `triggerBody()?['payload']?['id']`. `Estado` = elegir
+        `Surtida` del desplegable (no fx). `SurtidoPor` = `fx` →
+        `triggerBody()?['payload']?['surtidoPor']`. `FechaSurtido` =
+        `fx` → `utcNow()`. Todos los demás campos se dejan **vacíos**
+        (no se tocan, para no borrar lo que ya tenían).
+     5. **Obtener elementos** ("header releído") — Lista:
+        `Requisiciones`. Mismo filtro que el paso 1. ⚠️ Para el "Desde"
+        del Seleccionar siguiente, arma la referencia con `fx`
+        (`outputs('Obtener_elementos_N')?['body/value']`) en vez de
+        clic en el contenido dinámico — de lo contrario Power Automate
+        puede ofrecer envolver la acción en un ciclo "Aplicar a cada
+        uno" que no se necesita para nada aquí.
+     6. **Seleccionar** — mismas 16 filas de siempre.
+     7. **Obtener elementos** ("renglones") — Lista: `Lista RenglonesRequisicion`.
+        Filter Query en `fx`: `concat('RequisicionID eq ', triggerBody()?['payload']?['id'])`.
+     8. **Seleccionar** — mismas 10 filas de siempre (con Moneda Value),
+        Desde armado también en `fx`.
+     9. **Respuesta** (código `200`) — Cuerpo con 3 burbujas, mismo
+        patrón de `requisicionObtener`.
+   - **False**: **Respuesta** con código de estado `400` y cuerpo
+     literal `{ "error": "Solo una requisición Aprobada puede marcarse como Surtida." }`.
+
+⚠️ **Cuidado con las opciones de la columna "Estado"**: si al escribir
+las opciones de una columna Elección se separan por comas dentro de un
+solo cuadro de texto, es fácil que una coma quede pegada al final de
+una opción (ej. `Aprobada,` en vez de `Aprobada`) — eso hace que
+cualquier comparación de texto contra `Aprobada` nunca coincida. Revisa
+las opciones de la columna en **Configuración de lista → Estado** y
+confirma que no tengan comas ni espacios de más. Si corriges una
+opción ya usada en algún elemento, ese elemento no se actualiza solo:
+hay que volver a seleccionar el valor corregido en esa fila.
 
 ### `rolObtener`
 - **Obtener elementos** — Lista: `RolesUsuarios`.
