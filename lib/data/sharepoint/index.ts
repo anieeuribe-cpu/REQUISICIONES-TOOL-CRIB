@@ -26,7 +26,11 @@ interface RequisicionFlowItem {
 }
 
 function mapRequisicionFlowItem(item: RequisicionFlowItem): Requisicion {
-  return mapRequisicion(String(item.id), item.fields, item.renglones.map(mapRenglonFields));
+  // El flujo de Power Automate a veces regresa un elemento vacío/nulo en "renglones"
+  // (por ejemplo si Power Automate arma el arreglo con un espacio extra) — se descarta
+  // en vez de tronar, ya que un renglón sin datos no aporta nada a la requisición.
+  const renglones = (item.renglones ?? []).filter((r): r is RenglonFields => Boolean(r));
+  return mapRequisicion(String(item.id), item.fields, renglones.map(mapRenglonFields));
 }
 
 export const sharepointStore: DataStore = {
