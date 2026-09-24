@@ -41,12 +41,12 @@ function normalizarActivo(valor: boolean | string): boolean {
 
 export function mapCatalogoFields(f: CatalogoFields): ParteCatalogo {
   return {
-    numeroParte: f.Title,
-    descripcion: f.Descripcion,
+    numeroParte: f.Title ?? "",
+    // En el catálogo real varias piezas no tienen Descripcion/Localidad
+    // capturada; SharePoint regresa null (no cadena vacía) en ese caso.
+    descripcion: f.Descripcion ?? "",
     origen: normalizarOrigen(f.Origen),
-    costo: f.Costo,
-    // En el catálogo real varias piezas no tienen Localidad capturada; SharePoint
-    // regresa null (no cadena vacía) en ese caso.
+    costo: f.Costo ?? 0,
     localidad: f.Localidad ?? "",
     activo: normalizarActivo(f.Activo)
   };

@@ -38,7 +38,10 @@ export async function GET() {
 export async function POST(request: Request) {
   const parsed = nuevaRequisicionSchema.safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos." }, { status: 400 });
+    const issue = parsed.error.issues[0];
+    const campo = issue?.path?.join(".");
+    const mensaje = issue?.message ?? "Datos inválidos.";
+    return NextResponse.json({ error: campo ? `${mensaje} (campo: ${campo})` : mensaje }, { status: 400 });
   }
 
   const usuario = getCurrentUser();
