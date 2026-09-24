@@ -327,11 +327,35 @@ los renglones de `requisicionCrear`. El detalle completo (renglones) no
 se carga aquí, solo en `requisicionObtener`, para que el historial sea
 rápido.
 
-### `requisicionObtener`
-- **Obtener elemento** — Lista: `Requisiciones`. Id: `triggerBody()?['payload']?['id']`.
-- **Obtener elementos** — Lista: `RequisicionRenglones`, filtrando por
-  la columna de búsqueda = `triggerBody()?['payload']?['id']`.
-- **Respuesta**: mismo patrón `{id, fields, renglones}` que `requisicionCrear`, con Condición para responder `{ "requisicion": null }` si el "Obtener elemento" falla (usar "Configurar ejecución posterior a fallo" en esa acción para no cortar el flujo).
+### `requisicionObtener` ✅ probado contra SharePoint real
+
+Mismo patrón que `requisicionCrear` (sin crear nada, solo lee), reusando
+el mismo mapa de 16/10 columnas:
+
+1. **Obtener elementos** ("header") — Lista: `Requisiciones`. Filter
+   Query en `fx`: `concat('ID eq ', triggerBody()?['payload']?['id'])`
+   — Top Count: `1`.
+2. **Seleccionar** ("header") — Desde: `value` (del paso 1). Mismas 16
+   filas que `requisicionCrear` paso 3 (con **" Value"** en Turno,
+   NivelAprobacion, Estado).
+3. **Condición**: `length(outputs('Obtener_elementos_N')?['body/value'])`
+   (⚠️ usa el nombre REAL de tu acción del paso 1, viendo el diagrama —
+   no un marcador de posición) **es mayor que** `0`.
+   - **True**:
+     4. **Obtener elementos** ("renglones") — Lista: `Lista RenglonesRequisicion`.
+        Filter Query en `fx`: `concat('RequisicionID eq ', triggerBody()?['payload']?['id'])`
+        — Top Count: `200`.
+     5. **Seleccionar** ("renglones") — Desde: `value` (del paso 4).
+        Mismas 10 filas que `requisicionCrear` paso 6 (con **" Value"**
+        en Moneda).
+     6. **Respuesta** (código `200`) — Cuerpo con 3 burbujas: texto
+        `{ "requisicion": { "id": ` + fx `triggerBody()?['payload']?['id']`
+        + texto `, "fields": ` + fx `first(outputs('Seleccionar_N')?['body'])`
+        (nombre real del Seleccionar del paso 2) + texto `, "renglones": `
+        + contenido dinámico "Salida" del Seleccionar del paso 5 + texto
+        ` } }`.
+   - **False**: **Respuesta** (código `200`) — Cuerpo literal:
+     `{ "requisicion": null }`.
 
 ### `requisicionMarcarSurtida`
 - **Obtener elemento** — Lista: `Requisiciones`. Id: `triggerBody()?['payload']?['id']`.
