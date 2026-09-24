@@ -117,6 +117,20 @@ También: al comparar un número escrito a mano en una Condición (ej. el
 plano) para que quede como número y no como texto — si no, sale el
 error "greater expects two parameters of matching types".
 
+### ⚠️ Columnas "Elección" (Choice): usar siempre la opción " Value"
+
+**Lección aprendida al construir `requisicionCrear`:** cuando el Mapa de
+un "Seleccionar" toma su Valor de una columna de tipo **Elección**
+(`Turno`, `NivelAprobacion`, `Estado`, `Moneda`, etc.), el selector de
+contenido dinámico ofrece **dos opciones con nombre parecido**:
+`NombreColumna` (trae un objeto completo tipo
+`{"@odata.type": "...SPListExpandedReference", "Id": 0, "Value": "..."}`)
+y **`NombreColumna Value`** (trae solo el texto plano, ej. `"Supervisor"`).
+La app siempre espera el texto plano — hay que elegir SIEMPRE la opción
+que termina en **" Value"** para cualquier columna Elección. Las columnas
+de texto simple (`Origen`, `NumeroParte`, etc.) no tienen este problema,
+solo aparece una opción para esas.
+
 Para las listas de las que ya conocemos el esquema completo
 (`CatalogoPartes`: `Title`=número de parte, `Descripcion`, `Origen`,
 `Costo`, `Localidad`, `Activo`) el detalle de abajo ya está probado
@@ -202,86 +216,100 @@ selector de contenido dinámico al agregar la acción.
   - Sí → **Respuesta**: `{ "aprobador":` + `first(outputs('Seleccionar_4')?['body'])` (armado completo en `fx`) + `}`
   - No → **Respuesta**: `{ "aprobador": null }`
 
-### `requisicionCrear`
+### `requisicionCrear` ✅ probado contra SharePoint real
 
 ⚠️ Listas reales del tenant (nombres distintos a los de la sección 2 de
 este documento — confirmados en vivo):
 - Encabezado: **`Requisiciones`**. Columnas reales: `Nombre`, `NoReloj`,
-  `Turno`, **`AreaDpto`** (no `AreaDepto`), `Fecha`, `SolicitanteCorreo`,
-  `SolicitanteNombre` (no la usa la app, se puede dejar vacía),
-  **`Total`** (no `TotalUSD`), `NivelAprobacion`, `Estado`,
+  `Turno` (Elección), **`AreaDpto`** (no `AreaDepto`), `Fecha`, `SolicitanteCorreo`,
+  `SolicitanteNombre` (no la usa la app, se deja vacía),
+  **`Total`** (no `TotalUSD`), `NivelAprobacion` (Elección), `Estado` (Elección),
   `AprobadorCorreo`, `AprobadoPor`, `FechaAprobacion`, `MotivoRechazo`,
   `SurtidoPor`, `FechaSurtido`. También existe una columna `Folio` de
   texto libre que la app no usa (el folio real se calcula del `ID` —
-  ver `lib/business.ts#formatFolio`); se puede dejar vacía.
+  ver `lib/business.ts#formatFolio`); se deja vacía.
 - Renglones: **`Lista RenglonesRequisicion`**. Columnas reales:
   `RequisicionID` (tipo **Número**, no es Lookup — se guarda ahí el
   `ID` del encabezado y se filtra `RequisicionID eq <id>`), `Cantidad`,
-  `NumeroParte`, `Descripcion`, `Maquina`, **`Costo`** (no
-  `CostoUnitario`), **`Loc`** (no `Localidad`), `Origen`, `Moneda`,
-  `CapturaManual`.
+  `NumeroParte`, `Descripcion`, `Maquina`, `Origen` (texto simple),
+  `Moneda` (Elección), **`Costo`** (no `CostoUnitario`), **`Loc`** (no
+  `Localidad`), `CapturaManual` (Sí/No).
 
-El código de la app (`lib/sharepoint/mappers.ts`) ya espera los nombres
+El código de la app (`lib/sharepoint/mappers.ts`) espera los nombres
 "limpios" (`AreaDepto`, `TotalUSD`, `CostoUnitario`, `Localidad`, etc.)
-— la traducción de nombre real → nombre limpio se hace en los pasos
-"Seleccionar" de abajo, igual que se hizo con `Title` en `CatalogoPartes`.
+y siempre texto plano — la traducción nombre real → nombre limpio, y
+objeto Elección → texto plano, se hace en los pasos "Seleccionar" de
+abajo.
 
-**Pasos** (usar exactamente estos nombres de acción o ajustar las
-referencias `outputs(...)` al nombre real que les ponga el editor):
+**Pasos** (probados y confirmados, ⚠️ sin usar la acción "Componer" —
+no existe/no se encontró en este tenant; se construye la Respuesta
+final directo):
 
 1. **Crear elemento** (`Requisiciones`) — `Nombre`, `NoReloj`, `Turno`,
    `AreaDpto`, `Fecha`, `SolicitanteCorreo` desde
-   `triggerBody()?['payload']?['...']`; `Total` desde
+   `triggerBody()?['payload']?['...']` (fx); `Total` desde
    `triggerBody()?['payload']?['totalUSD']`; `NivelAprobacion` y
    `AprobadorCorreo` desde el payload; **`Estado`** = `Pendiente`
-   (fijo, texto literal, no viene del payload).
+   (elegido del desplegable, no fx, no viene del payload).
+   `AprobadoPor`, `FechaAprobacion`, `MotivoRechazo`, `SurtidoPor`,
+   `FechaSurtido`, `SolicitanteNombre`, `Título`, `Folio` se dejan
+   **vacíos** (los llena el flujo de aprobación o la app después).
 2. **Obtener elementos** (`Requisiciones`) — Filter Query en `fx`:
    `concat('ID eq ', outputs('Crear_elemento')?['body/ID'])` — Top
    Count: `1`. (Se vuelve a leer el elemento recién creado para poder
    usar el content picker con nombres amigables en el Seleccionar de
-   abajo — el "body" crudo de "Crear elemento" no siempre expone bien
-   los nombres amigables en el picker.)
-3. **Seleccionar** ("header") — Desde: `value` (del paso 2). Mapa (15
+   abajo.)
+3. **Seleccionar** ("header") — Desde: `value` (del paso 2). Mapa (16
    filas, Clave = nombre limpio / Valor = columna real elegida del
-   picker): `Nombre`→Nombre, `NoReloj`→NoReloj, `Turno`→Turno,
-   `AreaDepto`→AreaDpto, `Fecha`→Fecha, `SolicitanteCorreo`→SolicitanteCorreo,
-   `TotalUSD`→Total, `NivelAprobacion`→NivelAprobacion, `Estado`→Estado,
-   `AprobadorCorreo`→AprobadorCorreo, `AprobadoPor`→AprobadoPor,
-   `FechaAprobacion`→FechaAprobacion, `MotivoRechazo`→MotivoRechazo,
-   `SurtidoPor`→SurtidoPor, `FechaSurtido`→FechaSurtido,
-   `Created`→(la fecha de creación del elemento, aparece en el picker
-   como "Creado"/"Fecha de creación"/"Created").
-4. **Aplicar a cada uno** sobre `triggerBody()?['payload']?['renglones']`:
+   picker, siempre bajo la acción "Obtener elementos" del paso 2, nunca
+   bajo "Crear elemento"): `Nombre`→Nombre, `NoReloj`→NoReloj,
+   **`Turno`→"Turno Value"** ⚠️, `AreaDepto`→AreaDpto, `Fecha`→Fecha,
+   `SolicitanteCorreo`→SolicitanteCorreo, `TotalUSD`→Total,
+   **`NivelAprobacion`→"NivelAprobacion Value"** ⚠️,
+   **`Estado`→"Estado Value"** ⚠️, `AprobadorCorreo`→AprobadorCorreo,
+   `AprobadoPor`→AprobadoPor, `FechaAprobacion`→FechaAprobacion,
+   `MotivoRechazo`→MotivoRechazo, `SurtidoPor`→SurtidoPor,
+   `FechaSurtido`→FechaSurtido, `Created`→Creado (fecha de creación del
+   elemento).
+   ⚠️ **Las 3 filas marcadas son columnas "Elección"**: el picker
+   siempre ofrece dos opciones con nombre parecido (`NombreColumna` y
+   `NombreColumna Value`) — hay que elegir la que termina en **" Value"**,
+   si no la respuesta trae un objeto `{"@odata.type": ..., "Id": 0,
+   "Value": "..."}` en vez de texto plano.
+4. **Aplicar a cada uno** sobre `triggerBody()?['payload']?['renglones']`
+   (armado en `fx`: `triggerBody()?['payload']?['renglones']`):
    - **Crear elemento** (`Lista RenglonesRequisicion`) — `RequisicionID`
-     = `outputs('Crear_elemento')?['body/ID']`; `Cantidad` =
-     `item()?['cantidad']`; `NumeroParte` = `item()?['numeroParte']`;
-     `Descripcion` = `item()?['descripcion']`; `Maquina` =
-     `item()?['maquina']`; `Origen` = `item()?['origen']`; `Moneda` =
-     `item()?['moneda']`; `Costo` = `item()?['costoUnitario']`; `Loc` =
+     = `outputs('Crear_elemento')?['body/ID']` (puede insertarse por
+     content picker eligiendo "Id" de "Crear elemento" — se ve igual de
+     válido); `Cantidad` = `item()?['cantidad']`; `NumeroParte` =
+     `item()?['numeroParte']`; `Descripcion` = `item()?['descripcion']`;
+     `Maquina` = `item()?['maquina']`; `Origen` = `item()?['origen']`;
+     `Moneda` = `item()?['moneda']` (aunque el campo sea desplegable,
+     acepta fx); `Costo` = `item()?['costoUnitario']`; `Loc` =
      `item()?['localidad']`; `CapturaManual` = `item()?['capturaManual']`.
-5. **Obtener elementos** (`Lista RenglonesRequisicion`) — Filter Query
-   en `fx`: `concat('RequisicionID eq ', outputs('Crear_elemento')?['body/ID'])`.
+5. **Obtener elementos** (`Lista RenglonesRequisicion`, **afuera** del
+   "Aplicar a cada uno") — Filter Query en `fx`:
+   `concat('RequisicionID eq ', outputs('Crear_elemento')?['body/ID'])`
+   — Top Count: `200`.
 6. **Seleccionar** ("renglones") — Desde: `value` (del paso 5). Mapa
-   (10 filas): `ID`→Id (el campo especial "Id" de SharePoint, viene en
-   el picker junto con las demás columnas), `Cantidad`→Cantidad,
-   `NumeroParte`→NumeroParte, `Descripcion`→Descripcion,
-   `Maquina`→Maquina, `Origen`→Origen, `Moneda`→Moneda,
-   `CostoUnitario`→Costo, `Localidad`→Loc, `CapturaManual`→CapturaManual.
-7. **Componer** — Entrada armada así (texto literal + 3 burbujas de
-   expresión/contenido dinámico, cada una insertada de un jalón, nunca
-   mezclada a mitad):
-   texto `{ "id": ` + fx `outputs('Crear_elemento')?['body/ID']` +
-   texto `, "fields": ` + fx `first(outputs('Seleccionar_header')?['body'])`
-   (ajustar el nombre `Seleccionar_header` al nombre real de la acción
-   del paso 3) + texto `, "renglones": ` + contenido dinámico "Salida"
-   del paso 6 (Seleccionar renglones) + texto ` }`.
-8. **Respuesta** — Código `200`. Cuerpo: texto `{ "requisicion": ` +
-   contenido dinámico "Salida" del paso 7 (Componer) + texto ` }`.
+   (10 filas, siempre bajo "Obtener elementos" del paso 5): `ID`→Id,
+   `Cantidad`→Cantidad, `NumeroParte`→NumeroParte,
+   `Descripcion`→Descripcion, `Maquina`→Maquina, `Origen`→Origen,
+   **`Moneda`→"Moneda Value"** ⚠️ (columna Elección, mismo problema que
+   arriba), `CostoUnitario`→Costo, `Localidad`→Loc,
+   `CapturaManual`→CapturaManual.
+7. **Respuesta** — Código `200`. Cuerpo armado con 3 burbujas, cada una
+   insertada de un jalón (nunca mezclada a mitad con texto):
+   texto `{ "requisicion": { "id": ` + fx
+   `outputs('Crear_elemento')?['body/ID']` + texto `, "fields": ` + fx
+   `first(outputs('Seleccionar_5')?['body'])` (ajustar `Seleccionar_5`
+   al nombre real de la acción del paso 3) + texto `, "renglones": ` +
+   contenido dinámico "Salida" del paso 6 (Seleccionar renglones) +
+   texto ` } }`.
 
 Nota: la app espera que cada renglón de la respuesta venga "plano"
 (`{ID, NumeroParte, Descripcion, ...}`, sin anidar en `{id, fields}`) —
-así el Mapa del paso 6 no necesita truco ninguno, es un Seleccionar
-simple como los ya probados.
+por eso el Mapa del paso 6 es un Seleccionar simple, sin ningún truco.
 
 ### `requisicionesListar`
 - **Obtener elementos** — Lista: `Requisiciones`.
