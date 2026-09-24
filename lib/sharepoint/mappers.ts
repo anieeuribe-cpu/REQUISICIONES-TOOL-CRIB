@@ -123,11 +123,11 @@ export function mapRenglonFields(f: RenglonFields): RenglonRequisicion {
     numeroParte: f.NumeroParte,
     descripcion: f.Descripcion,
     cantidad: f.Cantidad,
-    maquina: f.Maquina,
+    maquina: f.Maquina ?? "",
     origen: f.Origen,
     moneda: f.Moneda,
     costoUnitario: f.CostoUnitario,
-    localidad: f.Localidad,
+    localidad: f.Localidad ?? "",
     capturaManual: f.CapturaManual ?? false
   };
 }
