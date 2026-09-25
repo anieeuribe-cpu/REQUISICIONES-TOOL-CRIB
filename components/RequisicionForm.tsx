@@ -214,12 +214,12 @@ export default function RequisicionForm({
 
       <section className="card overflow-x-auto p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Renglones</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Información</h2>
           <button type="button" className="btn-secondary" onClick={agregarFila}>
             + Agregar renglón
           </button>
         </div>
-        <table className="w-full min-w-[980px] text-sm">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase text-gray-500">
               <th className="py-2 pr-2">Número de parte</th>
