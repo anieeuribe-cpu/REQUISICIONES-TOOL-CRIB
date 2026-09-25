@@ -212,14 +212,18 @@ export default function RequisicionForm({
         </label>
       </section>
 
-      <section className="card overflow-x-auto p-5">
+      <section className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Información</h2>
           <button type="button" className="btn-secondary" onClick={agregarFila}>
             + Agregar renglón
           </button>
         </div>
-        <table className="w-full text-sm">
+        {/* overflow-x-auto solo en la tabla (no en la sección completa): así el
+            menú del autocompletado de número de parte, que se sale de la tabla
+            hacia abajo, no queda recortado por el scroll horizontal. */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase text-gray-500">
               <th className="py-2 pr-2">Número de parte</th>
@@ -355,6 +359,7 @@ export default function RequisicionForm({
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       <section className="card flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
