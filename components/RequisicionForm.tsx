@@ -156,8 +156,8 @@ export default function RequisicionForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <section className="card grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <section className="card grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
           Nombre
           <input className="input-field" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
@@ -212,8 +212,8 @@ export default function RequisicionForm({
         </label>
       </section>
 
-      <section className="card p-5">
-        <div className="mb-3 flex items-center justify-between">
+      <section className="card p-3">
+        <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Información</h2>
           <button type="button" className="btn-secondary" onClick={agregarFila}>
             + Agregar renglón
@@ -226,21 +226,21 @@ export default function RequisicionForm({
           <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left text-xs uppercase text-gray-500">
-              <th className="py-2 pr-2">Número de parte</th>
-              <th className="py-2 pr-2">Descripción</th>
-              <th className="py-2 pr-2">Origen</th>
-              <th className="py-2 pr-2">Cantidad</th>
-              <th className="py-2 pr-2">Máquina</th>
-              <th className="py-2 pr-2">Costo</th>
-              <th className="py-2 pr-2">Localidad</th>
-              <th className="py-2 pr-2">Importe</th>
-              <th className="py-2" />
+              <th className="py-1 pr-2">Número de parte</th>
+              <th className="py-1 pr-2">Descripción</th>
+              <th className="py-1 pr-2">Origen</th>
+              <th className="py-1 pr-2">Cantidad</th>
+              <th className="py-1 pr-2">Máquina</th>
+              <th className="py-1 pr-2">Costo</th>
+              <th className="py-1 pr-2">Localidad</th>
+              <th className="py-1 pr-2">Importe</th>
+              <th className="py-1" />
             </tr>
           </thead>
           <tbody>
             {filas.map((fila) => (
               <tr key={fila.clientId} className="border-b border-gray-100 align-top">
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   {fila.manual ? (
                     <div className="flex flex-col gap-1">
                       <input
@@ -267,7 +267,7 @@ export default function RequisicionForm({
                     />
                   )}
                 </td>
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   {fila.manual ? (
                     <input
                       className="input-field w-40"
@@ -279,7 +279,7 @@ export default function RequisicionForm({
                     <span className="text-gray-700">{fila.descripcion || "—"}</span>
                   )}
                 </td>
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   {fila.manual ? (
                     <select
                       className="input-field w-32"
@@ -298,7 +298,7 @@ export default function RequisicionForm({
                     <span className="text-gray-400">—</span>
                   )}
                 </td>
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   <input
                     type="number"
                     min={1}
@@ -307,14 +307,14 @@ export default function RequisicionForm({
                     onChange={(e) => actualizarFila(fila.clientId, { cantidad: Number(e.target.value) })}
                   />
                 </td>
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   <input
                     className="input-field w-32"
                     value={fila.maquina}
                     onChange={(e) => actualizarFila(fila.clientId, { maquina: e.target.value })}
                   />
                 </td>
-                <td className="py-2 pr-2 whitespace-nowrap">
+                <td className="py-1 pr-2 whitespace-nowrap">
                   {fila.manual ? (
                     <input
                       type="number"
@@ -330,7 +330,7 @@ export default function RequisicionForm({
                     </span>
                   )}
                 </td>
-                <td className="py-2 pr-2">
+                <td className="py-1 pr-2">
                   {fila.manual ? (
                     <input
                       className="input-field w-28"
@@ -341,12 +341,12 @@ export default function RequisicionForm({
                     <span className="text-gray-700">{fila.localidad || "—"}</span>
                   )}
                 </td>
-                <td className="py-2 pr-2 whitespace-nowrap font-medium text-navy">
+                <td className="py-1 pr-2 whitespace-nowrap font-medium text-navy">
                   {fila.moneda === "USD"
                     ? formatUSD(fila.cantidad * fila.costoUnitario)
                     : formatMXN(fila.cantidad * fila.costoUnitario)}
                 </td>
-                <td className="py-2">
+                <td className="py-1">
                   <button
                     type="button"
                     className="text-xs font-medium text-estado-rechazada hover:underline"
@@ -362,7 +362,7 @@ export default function RequisicionForm({
         </div>
       </section>
 
-      <section className="card flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="card flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-500">Total (siempre en USD)</p>
           <p className="text-2xl font-bold text-navy">{total != null ? formatUSD(total) : "Calculando…"}</p>
