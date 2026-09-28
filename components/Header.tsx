@@ -12,12 +12,8 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
     <header className="bg-navy text-white shadow-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <span
-            aria-hidden
-            className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-sm font-bold text-navy"
-          >
-            TC
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="ProDriven Global Brands" className="h-8 w-auto rounded-sm bg-white px-1.5 py-1" />
           <div className="leading-tight">
             <p className="text-sm font-semibold sm:text-base">Tool Crib</p>
             <p className="text-[11px] text-navy-100 sm:text-xs">Requisiciones de material</p>
