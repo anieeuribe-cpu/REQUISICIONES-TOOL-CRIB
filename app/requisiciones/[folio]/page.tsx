@@ -19,11 +19,13 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode })
 }
 
 export default async function DetalleRequisicionPage({ params }: { params: { folio: string } }) {
-  const requisicion = await dataStore.obtenerRequisicion(params.folio);
+  const usuario = getCurrentUser();
+  const [requisicion, rol] = await Promise.all([
+    dataStore.obtenerRequisicion(params.folio),
+    usuario ? dataStore.obtenerRol(usuario.correo) : Promise.resolve(null)
+  ]);
   if (!requisicion) notFound();
 
-  const usuario = getCurrentUser();
-  const rol = usuario ? await dataStore.obtenerRol(usuario.correo) : null;
   const esModoMock = (process.env.DATA_MODE ?? "mock") === "mock";
 
   return (
