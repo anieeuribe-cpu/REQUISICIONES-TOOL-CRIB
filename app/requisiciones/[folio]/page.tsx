@@ -13,7 +13,7 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode })
   return (
     <div>
       <p className="text-xs uppercase tracking-wide text-gray-500">{etiqueta}</p>
-      <p className="text-sm font-medium text-gray-900">{valor}</p>
+      <p className="break-words text-sm font-medium text-gray-900">{valor}</p>
     </div>
   );
 }
@@ -33,7 +33,7 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
         <StatusBadge estado={requisicion.estado} />
       </div>
 
-      <section className="card grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 lg:grid-cols-6">
+      <section className="card grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 lg:grid-cols-4">
         <Dato etiqueta="Nombre" valor={requisicion.nombre} />
         <Dato etiqueta="No. de Reloj" valor={requisicion.noReloj} />
         <Dato etiqueta="Turno" valor={requisicion.turno} />
@@ -98,8 +98,8 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
 
       {(requisicion.estado === "Aprobada" || requisicion.estado === "Rechazada" || requisicion.estado === "Surtida") && (
         <section className="card grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Dato etiqueta="Decidido por" valor={requisicion.aprobadoPor ?? "—"} />
-          <Dato etiqueta="Fecha de decisión" valor={requisicion.fechaAprobacion?.slice(0, 10) ?? "—"} />
+          <Dato etiqueta="Autorizado por" valor={requisicion.aprobadoPor ?? "—"} />
+          <Dato etiqueta="Fecha" valor={requisicion.fechaAprobacion?.slice(0, 10) ?? "—"} />
           {requisicion.estado === "Rechazada" && (
             <Dato etiqueta="Motivo de rechazo" valor={requisicion.motivoRechazo ?? "—"} />
           )}
