@@ -5,8 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Requisiciones de Material — Tool Crib",
-  description: "Plataforma de requisiciones de material del Tool Crib de la planta."
+  title: "Requisiciones de Material — Tool Crib"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
