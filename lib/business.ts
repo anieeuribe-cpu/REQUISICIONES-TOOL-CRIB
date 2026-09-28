@@ -27,8 +27,16 @@ export function nivelAprobacionPorMonto(totalUsd: number): NivelAprobacion {
   return "Gerente";
 }
 
+/** Se le suma 999 al ID de SharePoint para que el folio visible empiece en 1000. */
+const BASE_FOLIO = 999;
+
 export function formatFolio(id: number): string {
-  return `REQ-${String(id).padStart(5, "0")}`;
+  return String(id + BASE_FOLIO);
+}
+
+/** Inverso de formatFolio: recupera el ID real de SharePoint a partir del folio mostrado. */
+export function parseFolioId(folio: string): number {
+  return Number(folio.replace(/[^0-9]/g, "")) - BASE_FOLIO;
 }
 
 export function formatUSD(value: number): string {

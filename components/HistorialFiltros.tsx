@@ -56,48 +56,25 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
         })}
       </div>
 
-      <div className="card overflow-x-auto">
-        <table className="w-full min-w-[820px] text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 bg-navy-50 text-left text-xs uppercase text-navy-700">
-              <th className="px-4 py-3">Folio</th>
-              <th className="px-4 py-3">Solicitante</th>
-              <th className="px-4 py-3">Área/Dpto</th>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Firma requerida</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtradas.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                  No hay requisiciones en este filtro.
-                </td>
-              </tr>
-            )}
-            {filtradas.map((r) => (
-              <tr key={r.folio} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3 font-semibold text-navy">{r.folio}</td>
-                <td className="px-4 py-3">{r.nombre}</td>
-                <td className="px-4 py-3">{r.areaDepto}</td>
-                <td className="px-4 py-3">{r.fecha}</td>
-                <td className="px-4 py-3 font-medium">{formatUSD(r.totalUSD)}</td>
-                <td className="px-4 py-3">{r.nivelAprobacion}</td>
-                <td className="px-4 py-3">
-                  <StatusBadge estado={r.estado} />
-                </td>
-                <td className="px-4 py-3">
-                  <Link href={`/requisiciones/${r.folio}`} className="text-sm font-medium text-navy hover:underline">
-                    Ver detalle
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-col gap-2">
+        {filtradas.length === 0 && (
+          <div className="card px-4 py-8 text-center text-sm text-gray-500">No hay requisiciones en este filtro.</div>
+        )}
+        {filtradas.map((r) => (
+          <Link
+            key={r.folio}
+            href={`/requisiciones/${r.folio}`}
+            className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition hover:border-navy-200 hover:shadow"
+          >
+            <div>
+              <p className="text-sm font-bold text-navy">Folio: {r.folio}</p>
+              <p className="text-xs text-gray-500">
+                {r.areaDepto} · {r.nombre} · {r.fecha} · {formatUSD(r.totalUSD)} · Firma {r.nivelAprobacion}
+              </p>
+            </div>
+            <StatusBadge estado={r.estado} />
+          </Link>
+        ))}
       </div>
     </div>
   );

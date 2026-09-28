@@ -1,4 +1,4 @@
-import { nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
+import { nivelAprobacionPorMonto, parseFolioId, totalUSD } from "@/lib/business";
 import type { DataStore } from "@/lib/data/store";
 import { callFlow } from "@/lib/sharepoint/powerAutomateClient";
 import {
@@ -104,8 +104,8 @@ export const sharepointStore: DataStore = {
   },
 
   async obtenerRequisicion(folio) {
-    const id = Number(folio.replace(/[^0-9]/g, ""));
-    if (!id) return null;
+    const id = parseFolioId(folio);
+    if (!id || id < 1) return null;
     const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem | null }>("requisicionObtener", {
       id
     });
@@ -113,8 +113,8 @@ export const sharepointStore: DataStore = {
   },
 
   async marcarSurtida(folio, surtidoPor) {
-    const id = Number(folio.replace(/[^0-9]/g, ""));
-    if (!id) throw new Error(`Requisición ${folio} no encontrada.`);
+    const id = parseFolioId(folio);
+    if (!id || id < 1) throw new Error(`Requisición ${folio} no encontrada.`);
     // La validación de que el estado actual sea "Aprobada" la hace el propio
     // flujo (evita una condición de carrera entre leer y actualizar); si no
     // se cumple, el flujo responde con error y callFlow lanza una excepción.

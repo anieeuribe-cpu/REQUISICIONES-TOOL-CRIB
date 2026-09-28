@@ -31,7 +31,7 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-bold text-navy">{requisicion.folio}</h1>
+        <h1 className="text-xl font-bold text-navy">Folio: {requisicion.folio}</h1>
         <StatusBadge estado={requisicion.estado} />
       </div>
 
