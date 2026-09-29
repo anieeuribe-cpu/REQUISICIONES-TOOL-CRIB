@@ -10,6 +10,7 @@ export default function LogoutButton() {
       className="rounded px-2 py-1 font-medium text-navy-100 underline-offset-2 hover:text-white hover:underline"
       onClick={async () => {
         await fetch("/api/auth/session", { method: "DELETE" });
+        router.push("/");
         router.refresh();
       }}
     >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { SesionUsuario } from "@/lib/auth";
 
 export default function IdentifyGate({
@@ -12,6 +12,14 @@ export default function IdentifyGate({
   children: React.ReactNode;
 }) {
   const [usuario, setUsuario] = useState(usuarioInicial);
+
+  // usuarioInicial cambia cuando el servidor vuelve a renderizar (p.ej. tras
+  // cerrar sesión y hacer router.refresh()); useState solo toma el valor
+  // inicial una vez, así que sin esto el gate se quedaba "pegado" con la
+  // sesión vieja en memoria.
+  useEffect(() => {
+    setUsuario(usuarioInicial);
+  }, [usuarioInicial]);
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [noReloj, setNoReloj] = useState("");
