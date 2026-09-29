@@ -89,6 +89,30 @@ export const mockStore: DataStore = {
     return req;
   },
 
+  async decidirRequisicion(folio, decision, aprobadoPor, motivoRechazo) {
+    const req = g.__toolcribRequisiciones!.find((r) => r.folio === folio);
+    if (!req) throw new Error(`Requisición ${folio} no encontrada.`);
+    if (req.estado !== "Pendiente") {
+      throw new Error(`Solo una requisición Pendiente puede aprobarse/rechazarse (estado actual: ${req.estado}).`);
+    }
+    req.estado = decision;
+    req.aprobadoPor = aprobadoPor;
+    req.fechaAprobacion = new Date().toISOString();
+    if (decision === "Rechazada") req.motivoRechazo = motivoRechazo || "Sin motivo especificado.";
+    return req;
+  },
+
+  async editarOrigenRenglon(renglonId, origen) {
+    for (const req of g.__toolcribRequisiciones!) {
+      const renglon = req.renglones.find((r) => r.id === renglonId);
+      if (renglon) {
+        renglon.origen = origen;
+        return;
+      }
+    }
+    throw new Error(`Renglón ${renglonId} no encontrado.`);
+  },
+
   async obtenerRol(correo) {
     return ROLES_SEED.find((u) => u.correo.toLowerCase() === correo.toLowerCase()) ?? null;
   }

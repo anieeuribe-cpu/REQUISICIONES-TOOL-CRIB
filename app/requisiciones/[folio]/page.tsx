@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import DecidirButtons from "@/components/DecidirButtons";
 import DevAprobarPanel from "@/components/DevAprobarPanel";
+import OrigenEditable from "@/components/OrigenEditable";
 import OriginBadge from "@/components/OriginBadge";
 import StatusBadge from "@/components/StatusBadge";
 import SurtirButton from "@/components/SurtirButton";
@@ -20,13 +22,15 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode })
 
 export default async function DetalleRequisicionPage({ params }: { params: { folio: string } }) {
   const usuario = getCurrentUser();
-  const [requisicion, rol] = await Promise.all([
-    dataStore.obtenerRequisicion(params.folio),
-    usuario ? dataStore.obtenerRol(usuario.correo) : Promise.resolve(null)
-  ]);
+  const requisicion = await dataStore.obtenerRequisicion(params.folio);
   if (!requisicion) notFound();
 
   const esModoMock = (process.env.DATA_MODE ?? "mock") === "mock";
+  const puedeEditarOrigen = usuario?.perfil === "ToolCrib";
+  const puedeDecidir =
+    requisicion.estado === "Pendiente" &&
+    usuario?.perfil !== undefined &&
+    usuario.perfil === requisicion.nivelAprobacion;
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,7 +76,11 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
                 </td>
                 <td className="py-2 pr-2">{r.descripcion}</td>
                 <td className="py-2 pr-2">
-                  <OriginBadge origen={r.origen} />
+                  {puedeEditarOrigen && r.id ? (
+                    <OrigenEditable folio={requisicion.folio} renglonId={r.id} origen={r.origen} />
+                  ) : (
+                    <OriginBadge origen={r.origen} />
+                  )}
                 </td>
                 <td className="py-2 pr-2">{r.cantidad}</td>
                 <td className="py-2 pr-2">{r.maquina}</td>
@@ -95,7 +103,10 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
         <Dato etiqueta="Total (USD)" valor={formatUSD(requisicion.totalUSD)} />
         <Dato etiqueta="Firma requerida" valor={requisicion.nivelAprobacion} />
         <Dato etiqueta="Aprobador asignado" valor={requisicion.aprobadorCorreo ?? "—"} />
-        {requisicion.estado === "Aprobada" && rol?.esAlmacen && <SurtirButton folio={requisicion.folio} />}
+        {requisicion.estado === "Aprobada" && usuario?.perfil === "ToolCrib" && (
+          <SurtirButton folio={requisicion.folio} />
+        )}
+        {puedeDecidir && <DecidirButtons folio={requisicion.folio} />}
       </section>
 
       {(requisicion.estado === "Aprobada" || requisicion.estado === "Rechazada" || requisicion.estado === "Surtida") && (

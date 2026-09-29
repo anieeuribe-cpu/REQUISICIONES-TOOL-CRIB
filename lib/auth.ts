@@ -14,10 +14,32 @@ import { cookies } from "next/headers";
  * `getCurrentUser()`, así que cambiar la fuente de identidad no
  * requiere tocar las pantallas ni las rutas de API.
  */
+export type Perfil = "Captura" | "ToolCrib" | "Supervisor" | "Superintendente" | "Gerente";
+
 export interface SesionUsuario {
   nombre: string;
   correo: string;
   noReloj: string;
+  perfil: Perfil;
+}
+
+/** Los 4 perfiles restringidos requieren un PIN; Captura queda libre. */
+const PIN_ENV_POR_PERFIL: Partial<Record<Perfil, string>> = {
+  ToolCrib: "PIN_TOOL_CRIB",
+  Supervisor: "PIN_SUPERVISOR",
+  Superintendente: "PIN_SUPERINTENDENTE",
+  Gerente: "PIN_GERENTE"
+};
+
+export function perfilRequierePin(perfil: Perfil): boolean {
+  return perfil in PIN_ENV_POR_PERFIL;
+}
+
+export function pinValido(perfil: Perfil, pin: string): boolean {
+  const envVar = PIN_ENV_POR_PERFIL[perfil];
+  if (!envVar) return true; // Captura no requiere PIN.
+  const esperado = process.env[envVar];
+  return Boolean(esperado) && pin === esperado;
 }
 
 const COOKIE_NAME = "tc_user";

@@ -7,11 +7,9 @@ export async function POST(_request: Request, { params }: { params: { folio: str
   if (!usuario) {
     return NextResponse.json({ error: "Debes identificarte antes de continuar." }, { status: 401 });
   }
-
-  const rol = await dataStore.obtenerRol(usuario.correo);
-  if (!rol?.esAlmacen) {
+  if (usuario.perfil !== "ToolCrib") {
     return NextResponse.json(
-      { error: "Solo un usuario del rol Almacén puede marcar una requisición como Surtida." },
+      { error: "Solo el perfil Tool Crib puede marcar una requisición como Surtida." },
       { status: 403 }
     );
   }

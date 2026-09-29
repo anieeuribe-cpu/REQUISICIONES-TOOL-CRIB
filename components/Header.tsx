@@ -8,6 +8,8 @@ const NAV_LINKS = [
 ];
 
 export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
+  const links = NAV_LINKS.filter((link) => link.href !== "/requisiciones/nueva" || usuario?.perfil === "Captura");
+
   return (
     <header className="bg-navy text-white shadow-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
@@ -20,7 +22,7 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
           </div>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
-          {NAV_LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -31,7 +33,9 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
           ))}
           {usuario && (
             <div className="ml-2 flex items-center gap-2 border-l border-navy-600 pl-3 text-xs text-navy-100">
-              <span>{usuario.nombre}</span>
+              <span>
+                {usuario.nombre} · {usuario.perfil}
+              </span>
               <LogoutButton />
             </div>
           )}

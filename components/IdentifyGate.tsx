@@ -2,7 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import type { SesionUsuario } from "@/lib/auth";
+import type { Perfil, SesionUsuario } from "@/lib/auth";
+
+const PERFILES: { valor: Perfil; etiqueta: string; descripcion: string; requierePin: boolean }[] = [
+  { valor: "Captura", etiqueta: "Captura", descripcion: "Crea y llena nuevas requisiciones", requierePin: false },
+  { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Edita el origen y marca como Surtida", requierePin: true },
+  { valor: "Supervisor", etiqueta: "Supervisor", descripcion: "Aprueba requisiciones de hasta $100", requierePin: true },
+  {
+    valor: "Superintendente",
+    etiqueta: "Superintendente",
+    descripcion: "Aprueba requisiciones de $101 a $500",
+    requierePin: true
+  },
+  { valor: "Gerente", etiqueta: "Gerente", descripcion: "Aprueba requisiciones de más de $500", requierePin: true }
+];
 
 export default function IdentifyGate({
   usuarioInicial,
@@ -23,19 +36,27 @@ export default function IdentifyGate({
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [noReloj, setNoReloj] = useState("");
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const router = useRouter();
 
+  const perfilSeleccionado = PERFILES.find((p) => p.valor === perfil);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!perfil) {
+      setError("Elige tu perfil para entrar.");
+      return;
+    }
     setError(null);
     setEnviando(true);
     try {
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, correo, noReloj })
+        body: JSON.stringify({ nombre, correo, noReloj, perfil, pin })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo identificar.");
@@ -59,7 +80,7 @@ export default function IdentifyGate({
           <h1 className="text-lg font-bold uppercase tracking-wide text-white">Requisiciones de material</h1>
           <p className="text-sm text-navy-100">Tool Crib</p>
         </div>
-        <form className="flex flex-col gap-3 p-6" onSubmit={onSubmit}>
+        <form className="flex flex-col gap-4 p-6" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
             Nombre completo
             <input
@@ -88,6 +109,38 @@ export default function IdentifyGate({
               required
             />
           </label>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-gray-700">Elige tu perfil para entrar</p>
+            {PERFILES.map((p) => (
+              <button
+                key={p.valor}
+                type="button"
+                onClick={() => setPerfil(p.valor)}
+                className={`rounded-md border p-3 text-left transition ${
+                  perfil === p.valor ? "border-navy bg-navy-50" : "border-gray-200 hover:border-navy-200"
+                }`}
+              >
+                <p className="text-sm font-bold text-navy">{p.etiqueta}</p>
+                <p className="text-xs text-gray-500">{p.descripcion}</p>
+              </button>
+            ))}
+          </div>
+
+          {perfilSeleccionado?.requierePin && (
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              PIN de {perfilSeleccionado.etiqueta}
+              <input
+                type="password"
+                inputMode="numeric"
+                className="input-field"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                required
+              />
+            </label>
+          )}
+
           {error && <p className="text-sm text-estado-rechazada">{error}</p>}
           <button type="submit" className="btn-primary" disabled={enviando}>
             {enviando ? "Entrando…" : "Entrar"}
