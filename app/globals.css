@@ -12,7 +12,7 @@ body {
 }
 
 .badge-estado {
-  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white;
+  @apply inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-white;
 }
 
 .badge-Pendiente {
