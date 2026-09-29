@@ -34,7 +34,7 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
   const filtradas = filtro === "Todas" ? requisiciones : requisiciones.filter((r) => r.estado === filtro);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap gap-2">
         {FILTROS.map((f) => {
           const activo = filtro === f.clave;
@@ -43,7 +43,7 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
               key={f.clave}
               type="button"
               onClick={() => setFiltro(f.clave)}
-              className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+              className="rounded-full border px-4 py-2 text-sm font-semibold transition"
               style={
                 activo
                   ? { backgroundColor: f.color, borderColor: f.color, color: "#fff" }
@@ -56,7 +56,7 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
         })}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {filtradas.length === 0 && (
           <div className="card px-4 py-8 text-center text-sm text-gray-500">No hay requisiciones en este filtro.</div>
         )}
@@ -64,11 +64,11 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
           <Link
             key={r.folio}
             href={`/requisiciones/${r.folio}`}
-            className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition hover:border-navy-200 hover:shadow"
+            className="card flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:border-navy-200 hover:shadow"
           >
             <div>
-              <p className="text-sm font-bold text-navy">Folio: {r.folio}</p>
-              <p className="text-xs text-gray-500">
+              <p className="text-lg font-bold text-navy">Folio: {r.folio}</p>
+              <p className="text-sm text-gray-500">
                 {r.areaDepto} · {r.nombre} · {r.fecha} · {formatUSD(r.totalUSD)} · Firma {r.nivelAprobacion}
               </p>
             </div>

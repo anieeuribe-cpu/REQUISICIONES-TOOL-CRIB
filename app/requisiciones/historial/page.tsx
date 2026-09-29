@@ -8,7 +8,7 @@ export default async function HistorialPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-navy">Historial de requisiciones</h1>
+      <h1 className="text-2xl font-bold text-navy">Historial de requisiciones</h1>
       <HistorialFiltros requisiciones={requisiciones} />
     </div>
   );
