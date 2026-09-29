@@ -52,12 +52,14 @@ export default function IdentifyGate({
 
   return (
     <div className="mx-auto max-w-sm py-12">
-      <div className="card p-6">
-        <h1 className="mb-1 text-lg font-bold text-navy">Identifícate</h1>
-        <p className="mb-4 text-sm text-gray-600">
-          Ingresa tus datos para usar la plataforma de requisiciones del Tool Crib.
-        </p>
-        <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+      <div className="card overflow-hidden">
+        <div className="flex flex-col items-center gap-2 bg-navy px-6 py-8 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="ProDriven Global Brands" className="h-9 w-auto" />
+          <h1 className="text-lg font-bold uppercase tracking-wide text-white">Requisiciones de material</h1>
+          <p className="text-sm text-navy-100">Tool Crib</p>
+        </div>
+        <form className="flex flex-col gap-3 p-6" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
             Nombre completo
             <input
