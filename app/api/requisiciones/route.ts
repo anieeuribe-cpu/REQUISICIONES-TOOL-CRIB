@@ -49,6 +49,9 @@ export async function POST(request: Request) {
   if (!solicitanteCorreo) {
     return NextResponse.json({ error: "Debes identificarte antes de crear una requisición." }, { status: 401 });
   }
+  if (usuario?.perfil !== "Captura") {
+    return NextResponse.json({ error: "Solo el perfil Captura puede crear requisiciones." }, { status: 403 });
+  }
 
   try {
     const requisicion = await dataStore.crearRequisicion({ ...parsed.data, solicitanteCorreo });

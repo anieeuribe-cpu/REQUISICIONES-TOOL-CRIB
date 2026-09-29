@@ -125,6 +125,25 @@ export const sharepointStore: DataStore = {
     return mapRequisicionFlowItem(requisicion);
   },
 
+  async decidirRequisicion(folio, decision, aprobadoPor, motivoRechazo) {
+    const id = parseFolioId(folio);
+    if (!id || id < 1) throw new Error(`Requisición ${folio} no encontrada.`);
+    // La validación de que el estado actual sea "Pendiente" la hace el propio
+    // flujo, igual que marcarSurtida — evita una condición de carrera entre
+    // leer y actualizar.
+    const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem }>("requisicionDecidir", {
+      id,
+      estado: decision,
+      aprobadoPor,
+      motivoRechazo: motivoRechazo ?? ""
+    });
+    return mapRequisicionFlowItem(requisicion);
+  },
+
+  async editarOrigenRenglon(renglonId, origen) {
+    await callFlow<{ ok: boolean }>("renglonEditarOrigen", { id: renglonId, origen });
+  },
+
   async obtenerRol(correo) {
     const { rol } = await callFlow<{ rol: RolFields | null }>("rolObtener", { correo });
     return rol ? mapRolFields(rol) : null;

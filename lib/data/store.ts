@@ -1,6 +1,7 @@
 import type {
   Aprobador,
   NuevaRequisicionInput,
+  Origen,
   ParteCatalogo,
   Requisicion,
   TipoCambio,
@@ -28,6 +29,15 @@ export interface DataStore {
   listarRequisiciones(): Promise<Requisicion[]>;
   obtenerRequisicion(folio: string): Promise<Requisicion | null>;
   marcarSurtida(folio: string, surtidoPor: string): Promise<Requisicion>;
+  /** Aprueba o rechaza una requisición Pendiente directamente desde la app (además del correo/Teams). */
+  decidirRequisicion(
+    folio: string,
+    decision: "Aprobada" | "Rechazada",
+    aprobadoPor: string,
+    motivoRechazo?: string
+  ): Promise<Requisicion>;
+  /** Corrige el Origen (Americana/Mexicana) de un renglón ya capturado — perfil Tool Crib. */
+  editarOrigenRenglon(renglonId: number, origen: Origen): Promise<void>;
 
   obtenerRol(correo: string): Promise<UsuarioRol | null>;
 }

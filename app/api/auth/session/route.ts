@@ -1,12 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { encodeSession, getCurrentUser, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { encodeSession, getCurrentUser, perfilRequierePin, pinValido, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 const bodySchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido."),
   correo: z.string().trim().email("Correo inválido."),
-  noReloj: z.string().trim().min(1, "El número de reloj es requerido.")
+  noReloj: z.string().trim().min(1, "El número de reloj es requerido."),
+  perfil: z.enum(["Captura", "ToolCrib", "Supervisor", "Superintendente", "Gerente"]),
+  pin: z.string().trim().optional()
 });
 
 export async function GET() {
@@ -18,7 +20,10 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos." }, { status: 400 });
   }
-  const sesion = parsed.data;
+  const { pin, ...sesion } = parsed.data;
+  if (perfilRequierePin(sesion.perfil) && !pinValido(sesion.perfil, pin ?? "")) {
+    return NextResponse.json({ error: "PIN incorrecto para ese perfil." }, { status: 401 });
+  }
   cookies().set(SESSION_COOKIE_NAME, encodeSession(sesion), {
     httpOnly: true,
     sameSite: "lax",
