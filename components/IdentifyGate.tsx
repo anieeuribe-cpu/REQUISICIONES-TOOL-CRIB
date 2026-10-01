@@ -4,17 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import type { Perfil, SesionUsuario } from "@/lib/auth";
 
-const PERFILES: { valor: Perfil; etiqueta: string; descripcion: string; requierePin: boolean }[] = [
+const PERFILES: { valor: Perfil; etiqueta: string; descripcion?: string; requierePin: boolean }[] = [
   { valor: "Captura", etiqueta: "Captura", descripcion: "Crea y llena nuevas requisiciones", requierePin: false },
-  { valor: "Supervisor", etiqueta: "Supervisor", descripcion: "Aprueba requisiciones de hasta $100", requierePin: true },
-  {
-    valor: "Superintendente",
-    etiqueta: "Superintendente",
-    descripcion: "Aprueba requisiciones de $101 a $500",
-    requierePin: true
-  },
-  { valor: "Gerente", etiqueta: "Gerente", descripcion: "Aprueba requisiciones de más de $500", requierePin: true },
-  { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Edita el origen y marca como Surtida", requierePin: true }
+  { valor: "Supervisor", etiqueta: "Supervisor", requierePin: true },
+  { valor: "Superintendente", etiqueta: "Superintendente", requierePin: true },
+  { valor: "Gerente", etiqueta: "Gerente", requierePin: true },
+  { valor: "ToolCrib", etiqueta: "Tool Crib", requierePin: true }
 ];
 
 export default function IdentifyGate({
@@ -100,7 +95,7 @@ export default function IdentifyGate({
                 }`}
               >
                 <p className="text-sm font-bold text-navy">{p.etiqueta}</p>
-                <p className="text-xs text-gray-500">{p.descripcion}</p>
+                {p.descripcion && <p className="text-xs text-gray-500">{p.descripcion}</p>}
               </button>
             ))}
           </div>
