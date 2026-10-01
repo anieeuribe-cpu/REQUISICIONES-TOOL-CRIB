@@ -13,7 +13,7 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
   return (
     <header className="bg-navy text-white shadow-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/requisiciones/historial" className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ProDriven Global Brands" className="h-9 w-auto" />
           <div className="leading-tight">

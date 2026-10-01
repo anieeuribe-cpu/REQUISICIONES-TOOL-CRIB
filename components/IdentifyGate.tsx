@@ -54,6 +54,7 @@ export default function IdentifyGate({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo identificar.");
       setUsuario(data.usuario);
+      router.push("/requisiciones/historial");
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
