@@ -19,7 +19,7 @@ export default function NuevaRequisicionPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-navy">Nueva requisición</h1>
-      <RequisicionForm nombreInicial={usuario?.nombre ?? ""} noRelojInicial={usuario?.noReloj ?? ""} />
+      <RequisicionForm nombreInicial={usuario?.nombre ?? ""} noRelojInicial="" />
     </div>
   );
 }

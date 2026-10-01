@@ -6,7 +6,6 @@ import type { Perfil, SesionUsuario } from "@/lib/auth";
 
 const PERFILES: { valor: Perfil; etiqueta: string; descripcion: string; requierePin: boolean }[] = [
   { valor: "Captura", etiqueta: "Captura", descripcion: "Crea y llena nuevas requisiciones", requierePin: false },
-  { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Edita el origen y marca como Surtida", requierePin: true },
   { valor: "Supervisor", etiqueta: "Supervisor", descripcion: "Aprueba requisiciones de hasta $100", requierePin: true },
   {
     valor: "Superintendente",
@@ -14,7 +13,8 @@ const PERFILES: { valor: Perfil; etiqueta: string; descripcion: string; requiere
     descripcion: "Aprueba requisiciones de $101 a $500",
     requierePin: true
   },
-  { valor: "Gerente", etiqueta: "Gerente", descripcion: "Aprueba requisiciones de más de $500", requierePin: true }
+  { valor: "Gerente", etiqueta: "Gerente", descripcion: "Aprueba requisiciones de más de $500", requierePin: true },
+  { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Edita el origen y marca como Surtida", requierePin: true }
 ];
 
 export default function IdentifyGate({
@@ -34,8 +34,6 @@ export default function IdentifyGate({
     setUsuario(usuarioInicial);
   }, [usuarioInicial]);
   const [nombre, setNombre] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [noReloj, setNoReloj] = useState("");
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +54,7 @@ export default function IdentifyGate({
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, correo, noReloj, perfil, pin })
+        body: JSON.stringify({ nombre, perfil, pin })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo identificar.");
@@ -90,26 +88,6 @@ export default function IdentifyGate({
               required
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-            Correo corporativo
-            <input
-              type="email"
-              className="input-field"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              required
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-            No. de Reloj
-            <input
-              className="input-field"
-              value={noReloj}
-              onChange={(e) => setNoReloj(e.target.value)}
-              required
-            />
-          </label>
-
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium text-gray-700">Elige tu perfil para entrar</p>
             {PERFILES.map((p) => (

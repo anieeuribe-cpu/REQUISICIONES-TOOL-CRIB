@@ -5,8 +5,6 @@ import { encodeSession, getCurrentUser, perfilRequierePin, pinValido, SESSION_CO
 
 const bodySchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido."),
-  correo: z.string().trim().email("Correo inválido."),
-  noReloj: z.string().trim().min(1, "El número de reloj es requerido."),
   perfil: z.enum(["Captura", "ToolCrib", "Supervisor", "Superintendente", "Gerente"]),
   pin: z.string().trim().optional()
 });

@@ -18,8 +18,6 @@ export type Perfil = "Captura" | "ToolCrib" | "Supervisor" | "Superintendente" |
 
 export interface SesionUsuario {
   nombre: string;
-  correo: string;
-  noReloj: string;
   perfil: Perfil;
 }
 

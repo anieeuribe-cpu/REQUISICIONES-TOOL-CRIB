@@ -39,13 +39,12 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
         <StatusBadge estado={requisicion.estado} />
       </div>
 
-      <section className="card grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 lg:grid-cols-6">
+      <section className="card grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 lg:grid-cols-5">
         <Dato etiqueta="Nombre" valor={requisicion.nombre} />
         <Dato etiqueta="No. de Reloj" valor={requisicion.noReloj} />
         <Dato etiqueta="Turno" valor={requisicion.turno} />
         <Dato etiqueta="Área/Dpto" valor={requisicion.areaDepto} />
         <Dato etiqueta="Fecha" valor={requisicion.fecha} />
-        <Dato etiqueta="Solicitante" valor={requisicion.solicitanteCorreo} />
       </section>
 
       <section className="card overflow-x-auto p-5">

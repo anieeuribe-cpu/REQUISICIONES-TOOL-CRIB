@@ -45,16 +45,18 @@ export async function POST(request: Request) {
   }
 
   const usuario = getCurrentUser();
-  const solicitanteCorreo = usuario?.correo ?? "";
-  if (!solicitanteCorreo) {
+  if (!usuario) {
     return NextResponse.json({ error: "Debes identificarte antes de crear una requisición." }, { status: 401 });
   }
-  if (usuario?.perfil !== "Captura") {
+  if (usuario.perfil !== "Captura") {
     return NextResponse.json({ error: "Solo el perfil Captura puede crear requisiciones." }, { status: 403 });
   }
 
   try {
-    const requisicion = await dataStore.crearRequisicion({ ...parsed.data, solicitanteCorreo });
+    // Ya no se pide un correo corporativo al identificarse (la terminal de
+    // Captura la comparten varias personas); se usa el nombre capturado en
+    // el formulario, que es el dato real de quién hizo esta requisición.
+    const requisicion = await dataStore.crearRequisicion({ ...parsed.data, solicitanteCorreo: parsed.data.nombre });
     return NextResponse.json({ requisicion }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
