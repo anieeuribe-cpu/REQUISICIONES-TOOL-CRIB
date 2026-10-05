@@ -34,7 +34,7 @@ export default function PartAutocomplete({
 
   useEffect(() => {
     const prefijo = texto.trim();
-    if (prefijo.length < 2) {
+    if (prefijo.length < 1) {
       setOpciones([]);
       return;
     }
@@ -94,7 +94,7 @@ export default function PartAutocomplete({
                 </button>
               </li>
             ))}
-          {!cargando && texto.trim().length >= 2 && opciones.length === 0 && (
+          {!cargando && texto.trim().length >= 1 && opciones.length === 0 && (
             <li className="px-3 py-2 text-xs text-gray-500">Sin resultados en el catálogo.</li>
           )}
           <li className="border-t border-gray-100">
