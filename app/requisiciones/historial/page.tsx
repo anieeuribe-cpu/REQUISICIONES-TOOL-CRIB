@@ -13,11 +13,16 @@ export default async function HistorialPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-navy">Historial de requisiciones</h1>
-        {usuario?.perfil === "Captura" && (
-          <Link href="/requisiciones/nueva" className="btn-primary rounded-full">
-            + Nueva requisición
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <a href="/api/requisiciones/export" className="btn-secondary rounded-full">
+            Exportar a Excel
+          </a>
+          {usuario?.perfil === "Captura" && (
+            <Link href="/requisiciones/nueva" className="btn-primary rounded-full">
+              + Nueva requisición
+            </Link>
+          )}
+        </div>
       </div>
       <HistorialFiltros requisiciones={requisiciones} />
     </div>
