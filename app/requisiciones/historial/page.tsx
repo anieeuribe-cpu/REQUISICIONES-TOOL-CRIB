@@ -14,7 +14,7 @@ export default async function HistorialPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-navy">Historial de requisiciones</h1>
         {usuario?.perfil === "Captura" && (
-          <Link href="/requisiciones/nueva" className="btn-primary">
+          <Link href="/requisiciones/nueva" className="btn-primary rounded-full">
             + Nueva requisición
           </Link>
         )}
