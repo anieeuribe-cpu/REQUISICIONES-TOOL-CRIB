@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className="min-h-screen bg-[#f4f5f8]">
         <Header usuario={usuario} />
-        <main className="mx-auto w-[92%] max-w-[1800px] py-6">
+        <main className="mx-auto w-[88%] max-w-[1800px] py-6">
           <IdentifyGate usuarioInicial={usuario}>{children}</IdentifyGate>
         </main>
       </body>
