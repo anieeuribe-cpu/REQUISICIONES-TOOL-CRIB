@@ -417,14 +417,67 @@ hay que volver a seleccionar el valor corregido en esa fila.
   - Sí → **Respuesta**: `{ "rol":` + `first(outputs('Seleccionar_13')?['body'])` (armado en `fx`) + `}`
   - No → **Respuesta**: `{ "rol": null }`
 
-## 5. Las 10 acciones — todas probadas ✅
+### `requisicionDecidir` ⏳ pendiente de construir
+
+Para el botón Aprobar/Rechazar dentro de la app (perfiles Supervisor,
+Superintendente, Gerente). Es el mismo patrón que
+`requisicionMarcarSurtida`, con dos diferencias: la condición revisa
+`Estado = Pendiente` (en vez de `Aprobada`), y el nuevo estado que se
+guarda viene del payload (`Aprobada` o `Rechazada`), no fijo.
+
+1. **Obtener elementos** ("header") — Lista: `Requisiciones`. Filter
+   Query en `fx`: `concat('ID eq ', triggerBody()?['payload']?['id'])`
+   — Top Count: `1`.
+2. **Seleccionar** — mismas 16 filas de siempre (con **" Value"** en
+   Turno, NivelAprobacion, Estado).
+3. **Condición**: `first(outputs('Seleccionar_N')?['body'])?['Estado']`
+   (nombre real del Seleccionar del paso 2, armado en `fx`) **es igual
+   que** `Pendiente` (texto literal, sin fx, en el campo derecho).
+   - **True**:
+     4. **Actualizar elemento** — Lista: `Requisiciones`. Identificador:
+        `fx` → `triggerBody()?['payload']?['id']`. `Estado` = `fx` →
+        `triggerBody()?['payload']?['estado']` (aunque el campo sea
+        desplegable, acepta fx — mismo caso que `Moneda` en los
+        renglones de `requisicionCrear`). `AprobadoPor` = `fx` →
+        `triggerBody()?['payload']?['aprobadoPor']`. `FechaAprobacion` =
+        `fx` → `utcNow()`. `MotivoRechazo` = `fx` →
+        `triggerBody()?['payload']?['motivoRechazo']`. Todos los demás
+        campos se dejan **vacíos**.
+     5. **Obtener elementos** ("header releído") — mismo filtro que el
+        paso 1, armado en `fx` (no con el contenido dinámico, para
+        evitar el "Aplicar a cada uno" automático).
+     6. **Seleccionar** — mismas 16 filas de siempre.
+     7. **Obtener elementos** ("renglones") — Lista:
+        `Lista RenglonesRequisicion`. Filter Query en `fx`:
+        `concat('RequisicionID eq ', triggerBody()?['payload']?['id'])`.
+     8. **Seleccionar** — mismas 10 filas de siempre (con Moneda Value).
+     9. **Respuesta** (código `200`) — mismo patrón de 3 burbujas que
+        `requisicionObtener`/`requisicionMarcarSurtida`.
+   - **False**: **Respuesta** con código de estado `400` y cuerpo
+     literal `{ "error": "Solo una requisición Pendiente puede aprobarse o rechazarse." }`.
+
+### `renglonEditarOrigen` ⏳ pendiente de construir
+
+Para que el perfil Tool Crib edite Americana/Mexicana de un renglón.
+Mucho más simple que las demás — una sola acción:
+
+1. **Actualizar elemento** — Lista: `Lista RenglonesRequisicion`.
+   Identificador: `fx` → `triggerBody()?['payload']?['id']`. Campo
+   `Origen` = `fx` → `triggerBody()?['payload']?['origen']` (columna de
+   texto simple, no es Elección, acepta fx directo sin truco de
+   " Value"). Los demás campos se dejan vacíos.
+2. **Respuesta** — código `200`, cuerpo literal `{ "ok": true }` (sin
+   ninguna expresión, no depende de ningún dato).
+
+## 5. Las 12 acciones
 
 `buscarPartes`, `obtenerParte`, `tipoCambioVigente`, `aprobadoresListar`,
 `aprobadorObtener`, `requisicionCrear`, `requisicionesListar`,
-`requisicionObtener`, `requisicionMarcarSurtida`, `rolObtener` — las 10
+`requisicionObtener`, `requisicionMarcarSurtida`, `rolObtener` — estas 10
 quedaron construidas y confirmadas end-to-end contra las listas reales
-de SharePoint del tenant. El flujo `ToolCrib-API` ya está listo para
-conectar la app (ver sección 4).
+de SharePoint del tenant. `requisicionDecidir` y `renglonEditarOrigen`
+(arriba) son las 2 que faltan por construir para que los botones
+Aprobar/Rechazar y el edit de Origen dentro de la app funcionen.
 
 ## 4. Conectar la app
 
