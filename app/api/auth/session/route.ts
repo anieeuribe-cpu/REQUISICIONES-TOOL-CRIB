@@ -25,8 +25,11 @@ export async function POST(request: Request) {
   cookies().set(SESSION_COOKIE_NAME, encodeSession(sesion), {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30
+    // Un año: una vez que alguien se identifica en su navegador, no se le
+    // vuelve a pedir nombre/PIN salvo que use "Cambiar de usuario".
+    maxAge: 60 * 60 * 24 * 365
   });
   return NextResponse.json({ usuario: sesion });
 }
