@@ -10,8 +10,8 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ProDriven Global Brands" className="h-9 w-auto" />
           <div className="leading-tight">
-            <p className="text-sm font-semibold sm:text-base">Tool Crib</p>
-            <p className="text-[11px] text-navy-100 sm:text-xs">Requisiciones de material</p>
+            <p className="text-xl font-extrabold uppercase tracking-wide sm:text-2xl">Tool Crib</p>
+            <p className="text-xs text-navy-100 sm:text-sm">Requisiciones de material</p>
           </div>
         </Link>
         {usuario && (
