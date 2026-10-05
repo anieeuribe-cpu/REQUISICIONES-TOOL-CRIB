@@ -15,8 +15,8 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
           </div>
         </Link>
         {usuario && (
-          <div className="flex items-center gap-2 text-xs text-navy-100">
-            <span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-white">
               {usuario.nombre} · {usuario.perfil}
             </span>
             <LogoutButton />

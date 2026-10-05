@@ -7,14 +7,14 @@ export default function LogoutButton() {
   return (
     <button
       type="button"
-      className="rounded px-2 py-1 font-medium text-navy-100 underline-offset-2 hover:text-white hover:underline"
+      className="rounded-full bg-navy-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-600"
       onClick={async () => {
         await fetch("/api/auth/session", { method: "DELETE" });
         router.push("/");
         router.refresh();
       }}
     >
-      Salir
+      Cambiar de usuario
     </button>
   );
 }
