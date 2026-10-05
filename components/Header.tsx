@@ -5,7 +5,7 @@ import LogoutButton from "./LogoutButton";
 export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
   return (
     <header className="bg-navy text-white shadow-md">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
         <Link href="/requisiciones/historial" className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ProDriven Global Brands" className="h-9 w-auto" />
@@ -16,9 +16,7 @@ export default function Header({ usuario }: { usuario: SesionUsuario | null }) {
         </Link>
         {usuario && (
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-white">
-              {usuario.nombre} · {usuario.perfil}
-            </span>
+            <span className="text-sm font-semibold text-white">{usuario.nombre}</span>
             <LogoutButton />
           </div>
         )}
