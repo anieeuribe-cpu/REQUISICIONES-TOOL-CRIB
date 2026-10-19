@@ -6,10 +6,7 @@ import type { Perfil, SesionUsuario } from "@/lib/auth";
 
 const PERFILES: { valor: Perfil; etiqueta: string; descripcion?: string; requierePin: boolean }[] = [
   { valor: "Captura", etiqueta: "Captura", descripcion: "Crea y llena nuevas requisiciones", requierePin: false },
-  { valor: "Supervisor", etiqueta: "Supervisor", requierePin: true },
-  { valor: "Superintendente", etiqueta: "Superintendente", requierePin: true },
-  { valor: "Gerente", etiqueta: "Gerente", requierePin: true },
-  { valor: "ToolCrib", etiqueta: "Tool Crib", requierePin: true }
+  { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Surte requisiciones aprobadas", requierePin: true }
 ];
 
 export default function IdentifyGate({
