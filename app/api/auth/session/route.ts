@@ -5,7 +5,7 @@ import { encodeSession, getCurrentUser, perfilRequierePin, pinValido, SESSION_CO
 
 const bodySchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido."),
-  perfil: z.enum(["Captura", "ToolCrib", "Supervisor", "Superintendente", "Gerente"]),
+  perfil: z.enum(["Captura", "ToolCrib"]),
   pin: z.string().trim().optional()
 });
 

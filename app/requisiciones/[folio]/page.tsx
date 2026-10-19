@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import DecidirButtons from "@/components/DecidirButtons";
 import DevAprobarPanel from "@/components/DevAprobarPanel";
 import OrigenEditable from "@/components/OrigenEditable";
 import OriginBadge from "@/components/OriginBadge";
@@ -27,10 +26,6 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
 
   const esModoMock = (process.env.DATA_MODE ?? "mock") === "mock";
   const puedeEditarOrigen = usuario?.perfil === "ToolCrib";
-  const puedeDecidir =
-    requisicion.estado === "Pendiente" &&
-    usuario?.perfil !== undefined &&
-    usuario.perfil === requisicion.nivelAprobacion;
 
   return (
     <div className="flex flex-col gap-6">
@@ -105,7 +100,6 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
         {requisicion.estado === "Aprobada" && usuario?.perfil === "ToolCrib" && (
           <SurtirButton folio={requisicion.folio} />
         )}
-        {puedeDecidir && <DecidirButtons folio={requisicion.folio} />}
       </section>
 
       {(requisicion.estado === "Aprobada" || requisicion.estado === "Rechazada" || requisicion.estado === "Surtida") && (

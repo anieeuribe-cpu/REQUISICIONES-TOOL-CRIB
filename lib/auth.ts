@@ -14,19 +14,22 @@ import { cookies } from "next/headers";
  * `getCurrentUser()`, así que cambiar la fuente de identidad no
  * requiere tocar las pantallas ni las rutas de API.
  */
-export type Perfil = "Captura" | "ToolCrib" | "Supervisor" | "Superintendente" | "Gerente";
+/**
+ * Las aprobaciones (Supervisor/Superintendente/Gerente) se hacen por
+ * correo/Teams, no dentro de la app — por eso aquí solo hay 2 perfiles.
+ * `NivelAprobacion` (en lib/types.ts) sigue usando esos 3 nombres para el
+ * ruteo del correo de aprobación; eso no cambia.
+ */
+export type Perfil = "Captura" | "ToolCrib";
 
 export interface SesionUsuario {
   nombre: string;
   perfil: Perfil;
 }
 
-/** Los 4 perfiles restringidos requieren un PIN; Captura queda libre. */
+/** Solo Tool Crib requiere PIN; Captura queda libre. */
 const PIN_ENV_POR_PERFIL: Partial<Record<Perfil, string>> = {
-  ToolCrib: "PIN_TOOL_CRIB",
-  Supervisor: "PIN_SUPERVISOR",
-  Superintendente: "PIN_SUPERINTENDENTE",
-  Gerente: "PIN_GERENTE"
+  ToolCrib: "PIN_TOOL_CRIB"
 };
 
 export function perfilRequierePin(perfil: Perfil): boolean {
