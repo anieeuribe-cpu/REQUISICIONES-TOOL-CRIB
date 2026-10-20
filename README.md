@@ -43,8 +43,9 @@ decisión del aprobador — así se puede probar el flujo completo
 3. Crear el flujo de aprobación descrito en
    [`docs/POWER-AUTOMATE-FLOW.md`](docs/POWER-AUTOMATE-FLOW.md).
 4. En `.env.local` (o en las variables de entorno de Vercel), poner
-   `DATA_MODE=sharepoint` y `POWER_AUTOMATE_FLOW_URL` con la URL del
-   disparador HTTP del flujo del paso 2.
+   `DATA_MODE=sharepoint`, `POWER_AUTOMATE_FLOW_URL` con la URL del
+   disparador HTTP del flujo del paso 2, y `PIN_TOOL_CRIB` con el PIN
+   que se le pedirá a ese perfil para iniciar sesión.
 
 ## Scripts
 

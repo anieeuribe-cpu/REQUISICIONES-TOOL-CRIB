@@ -89,8 +89,10 @@ solo.
 La app muestra este resultado tal cual en la pantalla de Detalle
 (`app/requisiciones/[folio]/page.tsx`): quién aprobó/rechazó, cuándo, y
 el motivo si aplica. El botón "Marcar como Surtida" solo aparece ahí
-cuando `Estado = Aprobada` y el usuario que entró a la app tiene
-`EsAlmacen = Sí` en `RolesUsuarios`.
+cuando `Estado = Aprobada` y el usuario que entró a la app tiene el
+perfil **Tool Crib** (ver `lib/auth.ts` — ya no se consulta
+`RolesUsuarios`/`EsAlmacen`, esa lista quedó sin uso desde que la app
+pasó al modelo de perfiles con PIN).
 
 ## Notas de mantenimiento
 
