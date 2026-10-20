@@ -51,7 +51,6 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
               <th className="py-2 pr-2">Descripción</th>
               <th className="py-2 pr-2">Origen</th>
               <th className="py-2 pr-2">Cantidad</th>
-              <th className="py-2 pr-2">Máquina</th>
               <th className="py-2 pr-2">Costo</th>
               <th className="py-2 pr-2">Localidad</th>
               <th className="py-2 pr-2">Importe</th>
@@ -77,7 +76,6 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
                   )}
                 </td>
                 <td className="py-2 pr-2">{r.cantidad}</td>
-                <td className="py-2 pr-2">{r.maquina}</td>
                 <td className="py-2 pr-2 whitespace-nowrap">
                   {r.moneda === "USD" ? formatUSD(r.costoUnitario) : formatMXN(r.costoUnitario)}
                 </td>
