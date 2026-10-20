@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import type { Perfil, SesionUsuario } from "@/lib/auth";
 
@@ -18,10 +17,9 @@ export default function IdentifyGate({
 }) {
   const [usuario, setUsuario] = useState(usuarioInicial);
 
-  // usuarioInicial cambia cuando el servidor vuelve a renderizar (p.ej. tras
-  // cerrar sesión y hacer router.refresh()); useState solo toma el valor
-  // inicial una vez, así que sin esto el gate se quedaba "pegado" con la
-  // sesión vieja en memoria.
+  // Login y logout ahora recargan la página completa (ver onSubmit y
+  // LogoutButton.tsx), así que usuarioInicial ya siempre llega correcto en
+  // un montaje nuevo — este efecto queda solo como red de seguridad.
   useEffect(() => {
     setUsuario(usuarioInicial);
   }, [usuarioInicial]);
@@ -30,7 +28,6 @@ export default function IdentifyGate({
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const router = useRouter();
 
   const perfilSeleccionado = PERFILES.find((p) => p.valor === perfil);
 
@@ -50,9 +47,17 @@ export default function IdentifyGate({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo identificar.");
-      setUsuario(data.usuario);
-      router.push("/requisiciones/historial");
-      router.refresh();
+      // Recarga completa de página (no router.push()/router.refresh()):
+      // esa combinación — y hasta refresh() solo, llamado dentro de un
+      // handler async justo después de un setState — producía "Rendered
+      // more hooks than during the previous render" en el Router de Next
+      // (confirmado reproduciendo el error con un build de producción
+      // real). Una recarga dura es más lenta por una fracción de segundo,
+      // pero nunca falla: vuelve a pedir la página al servidor, que ya lee
+      // la cookie de sesión recién creada. app/page.tsx redirige a
+      // /requisiciones/historial, así que si no era un link profundo
+      // terminamos ahí de todas formas.
+      window.location.reload();
     } catch (err) {
       setError((err as Error).message);
     } finally {
