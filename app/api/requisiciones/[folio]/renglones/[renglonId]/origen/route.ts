@@ -4,7 +4,7 @@ import { dataStore } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
 
 const bodySchema = z.object({
-  origen: z.enum(["Americana", "Mexicana"])
+  origen: z.string().trim().min(1, "El origen es requerido.")
 });
 
 export async function POST(request: Request, { params }: { params: { folio: string; renglonId: string } }) {
