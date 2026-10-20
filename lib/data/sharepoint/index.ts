@@ -106,10 +106,18 @@ export const sharepointStore: DataStore = {
   async obtenerRequisicion(folio) {
     const id = parseFolioId(folio);
     if (!id || id < 1) return null;
-    const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem | null }>("requisicionObtener", {
-      id
-    });
-    return requisicion ? mapRequisicionFlowItem(requisicion) : null;
+    // El encabezado y los renglones se piden en paralelo (dos acciones
+    // separadas y sencillas en Power Automate) en vez de una sola acción
+    // que los lee uno tras otro — así la página de un folio carga en el
+    // tiempo de la consulta más lenta de las dos, no en la suma de ambas.
+    const [{ requisicion: header }, { renglones }] = await Promise.all([
+      callFlow<{ requisicion: { id: number; fields: RequisicionFields } | null }>("requisicionObtenerHeader", {
+        id
+      }),
+      callFlow<{ renglones: RenglonFields[] }>("requisicionObtenerRenglones", { id })
+    ]);
+    if (!header) return null;
+    return mapRequisicionFlowItem({ id: header.id, fields: header.fields, renglones });
   },
 
   async marcarSurtida(folio, surtidoPor) {
