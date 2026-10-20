@@ -357,6 +357,49 @@ el mismo mapa de 16/10 columnas:
    - **False**: **Respuesta** (código `200`) — Cuerpo literal:
      `{ "requisicion": null }`.
 
+⚠️ **Esta acción ya no la usa la app** (desde que se dividió en las dos
+de abajo, para que el detalle de un folio cargue más rápido). Puedes
+dejarla tal cual en el flujo sin que estorbe, o borrarla si quieres
+tener menos casos — no afecta nada en ningún caso.
+
+### `requisicionObtenerHeader` ⏳ pendiente de construir
+
+Para que la página del detalle de un folio cargue más rápido, la app ya
+no usa `requisicionObtener` (que leía encabezado y renglones uno
+después del otro) — en su lugar pide estas 2 acciones **al mismo
+tiempo** desde el código (no hace falta nada especial en Power
+Automate para eso, cada una es un caso del Switch normal y corriente).
+Esta es la mitad del encabezado — mismo patrón que los pasos 1-3 de
+`requisicionObtener`, pero como acción propia:
+
+1. **Obtener elementos** — Lista: `Requisiciones`. Filter Query en `fx`:
+   `concat('ID eq ', triggerBody()?['payload']?['id'])` — Top Count: `1`.
+2. **Seleccionar** — Desde: `value` (del paso 1). Mismas 16 filas de
+   siempre (con **" Value"** en Turno, NivelAprobacion, Estado).
+3. **Condición**: `length(outputs('Obtener_elementos_N')?['body/value'])`
+   (nombre real de tu acción del paso 1) **es mayor que** `0`.
+   - **True**: **Respuesta** (código `200`) — Cuerpo con 2 burbujas:
+     texto `{ "requisicion": { "id": ` + fx
+     `triggerBody()?['payload']?['id']` + texto `, "fields": ` + fx
+     `first(outputs('Seleccionar_N')?['body'])` (nombre real del
+     Seleccionar del paso 2) + texto ` } }`.
+   - **False**: **Respuesta** (código `200`) — Cuerpo literal:
+     `{ "requisicion": null }`.
+
+### `requisicionObtenerRenglones` ⏳ pendiente de construir
+
+La otra mitad — los renglones, sin condición (si no hay ninguno,
+regresa un arreglo vacío y ya):
+
+1. **Obtener elementos** — Lista: `Lista RenglonesRequisicion`. Filter
+   Query en `fx`: `concat('RequisicionID eq ', triggerBody()?['payload']?['id'])`
+   — Top Count: `200`.
+2. **Seleccionar** — Desde: `value` (del paso 1). Mismas 10 filas de
+   siempre (con **" Value"** en Moneda).
+3. **Respuesta** (código `200`) — Cuerpo: texto `{ "renglones": ` +
+   contenido dinámico "Salida" del paso 2 + texto ` }` (una sola
+   burbuja, patrón `buscarPartes`).
+
 ### `requisicionMarcarSurtida` ✅ probado contra SharePoint real
 
 1. **Obtener elementos** ("header") — Lista: `Requisiciones`. Filter
