@@ -54,7 +54,6 @@ export async function GET() {
       "Número de Parte": ren?.numeroParte ?? "",
       Descripción: ren?.descripcion ?? "",
       Cantidad: ren?.cantidad ?? "",
-      Máquina: ren?.maquina ?? "",
       Origen: ren?.origen ?? "",
       Moneda: ren?.moneda ?? "",
       "Costo Unitario": ren?.costoUnitario ?? "",
