@@ -229,7 +229,6 @@ export default function RequisicionForm({
               <th className="py-2 pr-2">Descripción</th>
               <th className="py-2 pr-2">Origen</th>
               <th className="py-2 pr-2">Cantidad</th>
-              <th className="py-2 pr-2">Máquina</th>
               <th className="py-2 pr-2">Costo</th>
               <th className="py-2 pr-2">Localidad</th>
               <th className="py-2 pr-2">Importe</th>
@@ -304,13 +303,6 @@ export default function RequisicionForm({
                     className="input-field w-20"
                     value={fila.cantidad}
                     onChange={(e) => actualizarFila(fila.clientId, { cantidad: Number(e.target.value) })}
-                  />
-                </td>
-                <td className="py-2 pr-2">
-                  <input
-                    className="input-field w-32"
-                    value={fila.maquina}
-                    onChange={(e) => actualizarFila(fila.clientId, { maquina: e.target.value })}
                   />
                 </td>
                 <td className="py-2 pr-2 whitespace-nowrap">
