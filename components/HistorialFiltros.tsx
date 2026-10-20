@@ -12,8 +12,7 @@ const FILTROS: { clave: ClaveFiltro; etiqueta: string; color: string }[] = [
   { clave: "Todas", etiqueta: "Todas", color: "#374151" },
   { clave: "Pendiente", etiqueta: "Pendientes por autorizar", color: "#b8860b" },
   { clave: "Aprobada", etiqueta: "Pendientes por surtir", color: "#1c7c3f" },
-  { clave: "Rechazada", etiqueta: "Rechazadas", color: "#b91c1c" },
-  { clave: "Surtida", etiqueta: "Surtidas", color: "#0f1c3f" }
+  { clave: "Rechazada", etiqueta: "Rechazadas", color: "#b91c1c" }
 ];
 
 export default function HistorialFiltros({ requisiciones }: { requisiciones: Requisicion[] }) {
@@ -31,7 +30,12 @@ export default function HistorialFiltros({ requisiciones }: { requisiciones: Req
     return c;
   }, [requisiciones]);
 
-  const filtradas = filtro === "Todas" ? requisiciones : requisiciones.filter((r) => r.estado === filtro);
+  // Folio más alto = creada más reciente (el folio es el ID de SharePoint + 999).
+  const ordenadas = useMemo(
+    () => [...requisiciones].sort((a, b) => Number(b.folio) - Number(a.folio)),
+    [requisiciones]
+  );
+  const filtradas = filtro === "Todas" ? ordenadas : ordenadas.filter((r) => r.estado === filtro);
 
   return (
     <div className="flex flex-col gap-5">
