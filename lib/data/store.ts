@@ -1,7 +1,6 @@
 import type {
   Aprobador,
   NuevaRequisicionInput,
-  Origen,
   ParteCatalogo,
   Requisicion,
   TipoCambio,
@@ -29,8 +28,9 @@ export interface DataStore {
   listarRequisiciones(): Promise<Requisicion[]>;
   obtenerRequisicion(folio: string): Promise<Requisicion | null>;
   marcarSurtida(folio: string, surtidoPor: string): Promise<Requisicion>;
-  /** Corrige el Origen (Americana/Mexicana) de un renglón ya capturado — perfil Tool Crib. */
-  editarOrigenRenglon(renglonId: number, origen: Origen): Promise<void>;
+  /** Corrige el Origen de un renglón ya capturado — perfil Tool Crib. Acepta
+   *  texto libre además de "Americana"/"Mexicana" (opción "Otro" en la app). */
+  editarOrigenRenglon(renglonId: number, origen: string): Promise<void>;
 
   obtenerRol(correo: string): Promise<UsuarioRol | null>;
 }

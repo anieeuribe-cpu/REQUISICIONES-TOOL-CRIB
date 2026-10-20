@@ -25,7 +25,9 @@ export interface RenglonRequisicion {
   descripcion: string;
   cantidad: number;
   maquina: string;
-  origen: Origen;
+  /** "Americana" | "Mexicana" al capturar, pero el perfil Tool Crib puede corregirlo
+   *  después a un texto libre ("Otro: ...") — por eso es string, no el enum Origen. */
+  origen: string;
   moneda: Moneda;
   costoUnitario: number; // en la moneda original de la pieza
   localidad: string;

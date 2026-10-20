@@ -1,19 +1,21 @@
-import type { Origen } from "@/lib/types";
+function estiloDe(origen: string): string {
+  if (origen === "Americana") return "bg-blue-100 text-blue-800";
+  if (origen === "Mexicana") return "bg-green-100 text-green-800";
+  return "bg-gray-100 text-gray-800"; // "Otro: ..." u otro texto libre
+}
 
-const ESTILOS: Record<Origen, string> = {
-  Americana: "bg-blue-100 text-blue-800",
-  Mexicana: "bg-green-100 text-green-800"
-};
+function etiquetaDe(origen: string): string {
+  if (origen === "Americana") return "Americana (USD)";
+  if (origen === "Mexicana") return "Mexicana (MXN)";
+  return origen || "—";
+}
 
-const ETIQUETAS: Record<Origen, string> = {
-  Americana: "Americana (USD)",
-  Mexicana: "Mexicana (MXN)"
-};
-
-export default function OriginBadge({ origen }: { origen: Origen }) {
+export default function OriginBadge({ origen }: { origen: string }) {
   return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${ESTILOS[origen]}`}>
-      {ETIQUETAS[origen]}
+    <span
+      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${estiloDe(origen)}`}
+    >
+      {etiquetaDe(origen)}
     </span>
   );
 }

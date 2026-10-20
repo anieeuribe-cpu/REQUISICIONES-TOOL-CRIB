@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import OriginBadge from "./OriginBadge";
-import type { Origen } from "@/lib/types";
+
+const OPCIONES = ["Americana", "Mexicana", "Otro"];
+
+function opcionInicial(origen: string): string {
+  return OPCIONES.includes(origen) ? origen : "Otro";
+}
 
 export default function OrigenEditable({
   folio,
@@ -12,14 +17,21 @@ export default function OrigenEditable({
 }: {
   folio: string;
   renglonId: number;
-  origen: Origen;
+  origen: string;
 }) {
   const router = useRouter();
+  const [editando, setEditando] = useState(false);
+  const [opcion, setOpcion] = useState(() => opcionInicial(origen));
+  const [otroTexto, setOtroTexto] = useState(() => (opcionInicial(origen) === "Otro" ? origen : ""));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function cambiar() {
-    const nuevoOrigen: Origen = origen === "Americana" ? "Mexicana" : "Americana";
+  async function guardar() {
+    const nuevoOrigen = opcion === "Otro" ? otroTexto.trim() : opcion;
+    if (!nuevoOrigen) {
+      setError("Escribe el origen.");
+      return;
+    }
     setGuardando(true);
     setError(null);
     try {
@@ -30,6 +42,7 @@ export default function OrigenEditable({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo actualizar el origen.");
+      setEditando(false);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -38,11 +51,57 @@ export default function OrigenEditable({
     }
   }
 
-  return (
-    <div className="flex flex-col gap-1">
-      <button type="button" onClick={cambiar} disabled={guardando} className="w-fit disabled:opacity-50">
+  if (!editando) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setOpcion(opcionInicial(origen));
+          setOtroTexto(opcionInicial(origen) === "Otro" ? origen : "");
+          setEditando(true);
+        }}
+        className="w-fit"
+      >
         <OriginBadge origen={origen} />
       </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <select className="input-field w-32 text-xs" value={opcion} onChange={(e) => setOpcion(e.target.value)}>
+        {OPCIONES.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      {opcion === "Otro" && (
+        <input
+          className="input-field w-32 text-xs"
+          placeholder="Especifica el origen"
+          value={otroTexto}
+          onChange={(e) => setOtroTexto(e.target.value)}
+        />
+      )}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={guardar}
+          disabled={guardando}
+          className="text-xs font-semibold text-navy hover:underline disabled:opacity-50"
+        >
+          {guardando ? "Guardando…" : "Guardar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditando(false)}
+          disabled={guardando}
+          className="text-xs text-gray-500 hover:underline"
+        >
+          Cancelar
+        </button>
+      </div>
       {error && <p className="text-[10px] text-estado-rechazada">{error}</p>}
     </div>
   );
