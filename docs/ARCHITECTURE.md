@@ -68,7 +68,7 @@ variable de entorno `DATA_MODE`:
   que le hace `POST { accion, payload }` al flujo "ToolCrib-API"
   (`POWER_AUTOMATE_FLOW_URL`) y recibe de vuelta el JSON ya armado. Ver
   [`POWER-AUTOMATE-API-FLOW.md`](POWER-AUTOMATE-API-FLOW.md) para el
-  detalle de las 10 acciones del flujo, y
+  detalle de las acciones del flujo, y
   [`SETUP-SHAREPOINT.md`](SETUP-SHAREPOINT.md) para el esquema de listas.
 
 Las reglas de negocio (conversión de moneda, total en USD, nivel de
@@ -80,8 +80,8 @@ backend (al guardar), así nunca se desincronizan.
 
 La versión actual usa una identificación ligera por cookie
 (`lib/auth.ts`, pantalla "Identifícate") para saber quién captura la
-requisición y resolver el rol de Almacén — **no** es un mecanismo de
-seguridad. Antes de producción, sustituir `getCurrentUser()` por el
+requisición y resolver el perfil (Captura/Tool Crib, este último con
+PIN) — **no** es un mecanismo de seguridad. Antes de producción, sustituir `getCurrentUser()` por el
 inicio de sesión único (SSO) de Microsoft Entra ID que ya usan las demás
 apps internas de la planta (por ejemplo `next-auth` con el proveedor de
 Azure AD, o el mismo reverse proxy/IdP corporativo). Como el resto de la
@@ -115,7 +115,7 @@ app/
     catalogo/search           Autocompletado (startswith, indexado)
     requisiciones              Crear / listar
     requisiciones/[folio]      Detalle
-    requisiciones/[folio]/surtir  Marcar Surtida (rol Almacén)
+    requisiciones/[folio]/surtir  Marcar Surtida (perfil Tool Crib)
     tipo-cambio                 Tipo de cambio vigente
     dev/aprobar/[folio]         Solo DATA_MODE=mock: simula la decisión
                                  que en producción toma Power Automate

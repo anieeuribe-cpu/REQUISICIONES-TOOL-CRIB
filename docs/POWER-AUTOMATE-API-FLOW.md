@@ -362,7 +362,7 @@ de abajo, para que el detalle de un folio cargue más rápido). Puedes
 dejarla tal cual en el flujo sin que estorbe, o borrarla si quieres
 tener menos casos — no afecta nada en ningún caso.
 
-### `requisicionObtenerHeader` ⏳ pendiente de construir
+### `requisicionObtenerHeader` ✅ probado contra SharePoint real
 
 Para que la página del detalle de un folio cargue más rápido, la app ya
 no usa `requisicionObtener` (que leía encabezado y renglones uno
@@ -386,7 +386,7 @@ Esta es la mitad del encabezado — mismo patrón que los pasos 1-3 de
    - **False**: **Respuesta** (código `200`) — Cuerpo literal:
      `{ "requisicion": null }`.
 
-### `requisicionObtenerRenglones` ⏳ pendiente de construir
+### `requisicionObtenerRenglones` ✅ probado contra SharePoint real
 
 La otra mitad — los renglones, sin condición (si no hay ninguno,
 regresa un arreglo vacío y ya):
@@ -460,7 +460,7 @@ hay que volver a seleccionar el valor corregido en esa fila.
   - Sí → **Respuesta**: `{ "rol":` + `first(outputs('Seleccionar_13')?['body'])` (armado en `fx`) + `}`
   - No → **Respuesta**: `{ "rol": null }`
 
-### `renglonEditarOrigen` ⏳ pendiente de construir
+### `renglonEditarOrigen` ✅ probado contra SharePoint real
 
 Para que el perfil Tool Crib edite Americana/Mexicana de un renglón.
 Mucho más simple que las demás — una sola acción:
@@ -473,15 +473,16 @@ Mucho más simple que las demás — una sola acción:
 2. **Respuesta** — código `200`, cuerpo literal `{ "ok": true }` (sin
    ninguna expresión, no depende de ningún dato).
 
-## 5. Las 11 acciones
+## 5. Las 13 acciones — todas construidas y probadas ✅
 
 `buscarPartes`, `obtenerParte`, `tipoCambioVigente`, `aprobadoresListar`,
 `aprobadorObtener`, `requisicionCrear`, `requisicionesListar`,
-`requisicionObtener`, `requisicionMarcarSurtida`, `rolObtener` — estas 10
-quedaron construidas y confirmadas end-to-end contra las listas reales
-de SharePoint del tenant. `renglonEditarOrigen` (arriba) es la única que
-falta por construir, para que el perfil Tool Crib pueda corregir
-Americana/Mexicana de un renglón dentro de la app.
+`requisicionObtener` (sin uso, ver nota arriba), `requisicionObtenerHeader`,
+`requisicionObtenerRenglones`, `requisicionMarcarSurtida`, `rolObtener`
+(sin uso desde que la app pasó al modelo de perfiles, puede borrarse) y
+`renglonEditarOrigen` — todas quedaron construidas y confirmadas
+end-to-end contra las listas reales de SharePoint del tenant. No queda
+ninguna acción pendiente.
 
 Las aprobaciones (Supervisor/Superintendente/Gerente) se quedan como
 estaban al principio: solo por correo/Teams, sin botones dentro de la
