@@ -33,7 +33,7 @@ export async function GET() {
   // listarRequisiciones() no trae renglones (para que el Historial cargue
   // rápido) — hay que releer cada una completa para el Excel.
   const resumenes = await dataStore.listarRequisiciones();
-  const detalles = await conConcurrenciaLimitada(resumenes, 8, (r) => dataStore.obtenerRequisicion(r.folio));
+  const detalles = await conConcurrenciaLimitada(resumenes, 25, (r) => dataStore.obtenerRequisicion(r.folio));
   const requisiciones = detalles.filter((r): r is Requisicion => r !== null);
 
   const filas = requisiciones.flatMap((r) => {
