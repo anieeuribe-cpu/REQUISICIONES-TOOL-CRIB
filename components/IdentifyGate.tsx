@@ -8,6 +8,31 @@ const PERFILES: { valor: Perfil; etiqueta: string; descripcion?: string; requier
   { valor: "ToolCrib", etiqueta: "Tool Crib", descripcion: "Surte requisiciones aprobadas", requierePin: true }
 ];
 
+// Se recuerdan en este navegador (no van en la cookie de sesión, que ahora
+// se borra al cerrar el navegador) para que la próxima vez solo haya que
+// confirmar con un clic, sin volver a escribir nombre/PIN.
+const CLAVE_NOMBRE = "tc_recordado_nombre";
+const CLAVE_PERFIL = "tc_recordado_perfil";
+const CLAVE_PIN = "tc_recordado_pin";
+
+function leerRecordado(clave: string): string {
+  try {
+    return localStorage.getItem(clave) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function guardarRecordado(clave: string, valor: string) {
+  try {
+    if (valor) localStorage.setItem(clave, valor);
+    else localStorage.removeItem(clave);
+  } catch {
+    // Si el navegador bloquea localStorage (modo privado, etc.), simplemente
+    // no se recuerda — no es un error que deba interrumpir el login.
+  }
+}
+
 export default function IdentifyGate({
   usuarioInicial,
   children
@@ -29,6 +54,19 @@ export default function IdentifyGate({
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  // localStorage no existe en el servidor, así que se lee recién montado en
+  // el navegador (si no, el nombre/perfil renderizados en el servidor no
+  // coincidirían con lo que ve el cliente al hidratar).
+  useEffect(() => {
+    const nombreGuardado = leerRecordado(CLAVE_NOMBRE);
+    const perfilGuardado = leerRecordado(CLAVE_PERFIL) as Perfil | "";
+    if (nombreGuardado) setNombre(nombreGuardado);
+    if (perfilGuardado && PERFILES.some((p) => p.valor === perfilGuardado)) {
+      setPerfil(perfilGuardado);
+      if (perfilGuardado === "ToolCrib") setPin(leerRecordado(CLAVE_PIN));
+    }
+  }, []);
+
   const perfilSeleccionado = PERFILES.find((p) => p.valor === perfil);
 
   async function onSubmit(e: FormEvent) {
@@ -47,6 +85,9 @@ export default function IdentifyGate({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo identificar.");
+      guardarRecordado(CLAVE_NOMBRE, nombre);
+      guardarRecordado(CLAVE_PERFIL, perfil);
+      guardarRecordado(CLAVE_PIN, perfil === "ToolCrib" ? pin : "");
       // Recarga completa de página (no router.push()/router.refresh()):
       // esa combinación — y hasta refresh() solo, llamado dentro de un
       // handler async justo después de un setState — producía "Rendered
