@@ -69,10 +69,19 @@ export const sharepointStore: DataStore = {
     // queda en la app — igual que en modo mock — para que el flujo de Power
     // Automate solo tenga que crear los renglones en SharePoint, sin
     // reimplementar reglas de negocio en fórmulas de Power Automate.
-    const tipoCambio = await sharepointStore.obtenerTipoCambioVigente();
+    //
+    // El tipo de cambio y la lista completa de aprobadores no dependen uno
+    // del otro, así que se piden en paralelo (en vez de tipo de cambio,
+    // luego aprobador, luego crear — 3 llamadas seguidas a Power Automate,
+    // cada una con su propio tiempo de espera) y el aprobador correcto se
+    // elige en la app una vez que ya se sabe el nivel de aprobación.
+    const [tipoCambio, aprobadores] = await Promise.all([
+      sharepointStore.obtenerTipoCambioVigente(),
+      sharepointStore.listarAprobadores()
+    ]);
     const total = totalUSD(input.renglones, tipoCambio.valorMXNporUSD);
     const nivel = nivelAprobacionPorMonto(total);
-    const aprobador = await sharepointStore.obtenerAprobador(nivel);
+    const aprobador = aprobadores.find((a) => a.rol === nivel);
 
     const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem }>("requisicionCrear", {
       nombre: input.nombre,
