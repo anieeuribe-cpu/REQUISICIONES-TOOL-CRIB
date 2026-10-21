@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import OriginBadge from "./OriginBadge";
 import PartAutocomplete from "./PartAutocomplete";
 import { formatMXN, formatUSD, nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
-import type { Origen, ParteCatalogo, RenglonRequisicion } from "@/lib/types";
+import type { Aprobador, Origen, ParteCatalogo, RenglonRequisicion } from "@/lib/types";
 
 const TURNOS_SUGERIDOS = ["4", "9", "53", "54"];
 const TURNO_OTRO = "Otro";
@@ -51,14 +51,23 @@ export default function RequisicionForm({
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [filas, setFilas] = useState<FilaRenglon[]>([filaVacia()]);
   const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(null);
+  const [aprobadores, setAprobadores] = useState<Aprobador[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  // Se piden desde que se abre la pantalla (no hasta que se da "Guardar")
+  // para que, al guardar, ya se puedan mandar junto con la requisición en
+  // vez de que el servidor tenga que volver a pedirlos — una llamada menos
+  // a Power Automate en el momento en que más importa la velocidad.
   useEffect(() => {
     fetch("/api/tipo-cambio")
       .then((r) => r.json())
       .then((d) => setValorMXNporUSD(d.tipoCambio?.valorMXNporUSD ?? null))
       .catch(() => setValorMXNporUSD(null));
+    fetch("/api/aprobadores")
+      .then((r) => r.json())
+      .then((d) => setAprobadores(d.aprobadores ?? null))
+      .catch(() => setAprobadores(null));
   }, []);
 
   function actualizarFila(clientId: string, cambios: Partial<FilaRenglon>) {
@@ -142,7 +151,13 @@ export default function RequisicionForm({
           turno,
           areaDepto,
           fecha,
-          renglones: filas.map(({ clientId, manual, ...r }) => r)
+          renglones: filas.map(({ clientId, manual, ...r }) => r),
+          // Ya se tenían cargados desde que se abrió la pantalla (ver el
+          // useEffect de arriba) — se mandan para que el servidor no tenga
+          // que volver a pedirlos. Si por lo que sea no cargaron a tiempo,
+          // se manda null y el servidor los pide él mismo como antes.
+          tipoCambio: valorMXNporUSD != null ? { valorMXNporUSD } : null,
+          aprobadores
         })
       });
       const data = await res.json();

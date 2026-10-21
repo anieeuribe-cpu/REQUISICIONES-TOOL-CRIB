@@ -78,6 +78,15 @@ export interface NuevaRequisicionInput {
   fecha: string;
   solicitanteCorreo: string;
   renglones: RenglonRequisicion[];
+  /**
+   * Tipo de cambio y aprobadores ya cargados por el formulario (lo pide al
+   * abrir la pantalla, para mostrar el total en vivo) — si vienen aquí, se
+   * evita volver a pedirlos a Power Automate al guardar (una llamada menos,
+   * ver lib/data/sharepoint/index.ts#crearRequisicion). Si no vienen, se
+   * piden igual que antes.
+   */
+  tipoCambio?: { valorMXNporUSD: number } | null;
+  aprobadores?: Aprobador[] | null;
 }
 
 export interface UsuarioRol {
