@@ -26,10 +26,11 @@ export async function POST(request: Request) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/",
-    // Un año: una vez que alguien se identifica en su navegador, no se le
-    // vuelve a pedir nombre/PIN salvo que use "Cambiar de usuario".
-    maxAge: 60 * 60 * 24 * 365
+    path: "/"
+    // Sin maxAge: cookie de sesión. Dura mientras el navegador esté
+    // abierto (recargar la página o navegar dentro de la app no pide
+    // login de nuevo), pero al cerrar el navegador por completo y volver
+    // a abrir el link, se pide identificarse otra vez.
   });
   return NextResponse.json({ usuario: sesion });
 }
