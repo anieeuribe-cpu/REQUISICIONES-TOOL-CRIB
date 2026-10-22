@@ -37,10 +37,23 @@ function monedaDeOrigen(origen: Origen) {
 
 export default function RequisicionForm({
   nombreInicial,
-  noRelojInicial
+  noRelojInicial,
+  tipoCambioInicial,
+  aprobadoresIniciales
 }: {
   nombreInicial: string;
   noRelojInicial: string;
+  /**
+   * Ya vienen listos desde el servidor (ver app/requisiciones/nueva/page.tsx),
+   * pedidos ANTES de que esta pantalla siquiera aparezca — así no hay
+   * ninguna espera de red pendiente en el navegador que pueda ganarle a un
+   * clic rápido en "Guardar" (con el fetch desde el cliente sí podía pasar:
+   * si se llenaba el formulario muy rápido, "Guardar" llegaba antes de que
+   * terminaran esas dos peticiones, y el servidor caía otra vez al camino
+   * lento de volver a pedirlas él mismo).
+   */
+  tipoCambioInicial: number | null;
+  aprobadoresIniciales: Aprobador[] | null;
 }) {
   const router = useRouter();
   const [nombre, setNombre] = useState(nombreInicial);
@@ -50,24 +63,29 @@ export default function RequisicionForm({
   const [areaDepto, setAreaDepto] = useState("");
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [filas, setFilas] = useState<FilaRenglon[]>([filaVacia()]);
-  const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(null);
-  const [aprobadores, setAprobadores] = useState<Aprobador[] | null>(null);
+  const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(tipoCambioInicial);
+  const [aprobadores, setAprobadores] = useState<Aprobador[] | null>(aprobadoresIniciales);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  // Se piden desde que se abre la pantalla (no hasta que se da "Guardar")
-  // para que, al guardar, ya se puedan mandar junto con la requisición en
-  // vez de que el servidor tenga que volver a pedirlos — una llamada menos
-  // a Power Automate en el momento en que más importa la velocidad.
+  // Red de seguridad: si por lo que sea no llegaron del servidor (ver
+  // arriba), se piden desde el navegador como respaldo — mejor tarde que
+  // nunca, aunque en el caso normal esto ni se ejecuta porque los estados
+  // ya traen valor desde el primer render.
   useEffect(() => {
-    fetch("/api/tipo-cambio")
-      .then((r) => r.json())
-      .then((d) => setValorMXNporUSD(d.tipoCambio?.valorMXNporUSD ?? null))
-      .catch(() => setValorMXNporUSD(null));
-    fetch("/api/aprobadores")
-      .then((r) => r.json())
-      .then((d) => setAprobadores(d.aprobadores ?? null))
-      .catch(() => setAprobadores(null));
+    if (valorMXNporUSD == null) {
+      fetch("/api/tipo-cambio")
+        .then((r) => r.json())
+        .then((d) => setValorMXNporUSD(d.tipoCambio?.valorMXNporUSD ?? null))
+        .catch(() => setValorMXNporUSD(null));
+    }
+    if (aprobadores == null) {
+      fetch("/api/aprobadores")
+        .then((r) => r.json())
+        .then((d) => setAprobadores(d.aprobadores ?? null))
+        .catch(() => setAprobadores(null));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function actualizarFila(clientId: string, cambios: Partial<FilaRenglon>) {
