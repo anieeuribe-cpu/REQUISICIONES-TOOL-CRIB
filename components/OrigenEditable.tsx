@@ -25,6 +25,13 @@ export default function OrigenEditable({
   const [otroTexto, setOtroTexto] = useState(() => (opcionInicial(origen) === "Otro" ? origen : ""));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Se muestra de inmediato al guardar, sin esperar a router.refresh() (que
+  // no avisa cuándo termina): si no, al cerrar el editor se alcanzaba a ver
+  // un instante el origen VIEJO (el prop `origen` sigue siendo el de antes
+  // hasta que el refresh trae los datos nuevos). Como siempre coincide con
+  // lo que el refresh va a confirmar, no hay que revertirlo después.
+  const [valorOptimista, setValorOptimista] = useState<string | null>(null);
+  const origenMostrado = valorOptimista ?? origen;
 
   async function guardar() {
     const nuevoOrigen = opcion === "Otro" ? otroTexto.trim() : opcion;
@@ -42,6 +49,7 @@ export default function OrigenEditable({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo actualizar el origen.");
+      setValorOptimista(nuevoOrigen);
       setEditando(false);
       router.refresh();
     } catch (err) {
@@ -56,13 +64,13 @@ export default function OrigenEditable({
       <button
         type="button"
         onClick={() => {
-          setOpcion(opcionInicial(origen));
-          setOtroTexto(opcionInicial(origen) === "Otro" ? origen : "");
+          setOpcion(opcionInicial(origenMostrado));
+          setOtroTexto(opcionInicial(origenMostrado) === "Otro" ? origenMostrado : "");
           setEditando(true);
         }}
         className="w-fit"
       >
-        <OriginBadge origen={origen} />
+        <OriginBadge origen={origenMostrado} />
       </button>
     );
   }
