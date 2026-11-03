@@ -10,6 +10,9 @@ import type { Aprobador, Origen, ParteCatalogo, RenglonRequisicion } from "@/lib
 const TURNOS_SUGERIDOS = ["4", "9", "53", "54"];
 const TURNO_OTRO = "Otro";
 
+const AREAS_SUGERIDAS = ["Mantenimiento", "Producción"];
+const AREA_OTRO = "Otro";
+
 interface FilaRenglon extends RenglonRequisicion {
   clientId: string;
   manual: boolean;
@@ -60,7 +63,8 @@ export default function RequisicionForm({
   const [noReloj, setNoReloj] = useState(noRelojInicial);
   const [turnoSeleccion, setTurnoSeleccion] = useState(TURNOS_SUGERIDOS[0]!);
   const [turnoManual, setTurnoManual] = useState("");
-  const [areaDepto, setAreaDepto] = useState("");
+  const [areaSeleccion, setAreaSeleccion] = useState(AREAS_SUGERIDAS[0]!);
+  const [areaManual, setAreaManual] = useState("");
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [filas, setFilas] = useState<FilaRenglon[]>([filaVacia()]);
   const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(tipoCambioInicial);
@@ -136,6 +140,7 @@ export default function RequisicionForm({
 
   const nivel = total != null ? nivelAprobacionPorMonto(total) : null;
   const turno = turnoSeleccion === TURNO_OTRO ? turnoManual.trim() : turnoSeleccion;
+  const areaDepto = areaSeleccion === AREA_OTRO ? areaManual.trim() : areaSeleccion;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -149,7 +154,7 @@ export default function RequisicionForm({
       setError("Completa descripción y localidad en los renglones capturados manualmente.");
       return;
     }
-    if (!areaDepto.trim()) {
+    if (!areaDepto) {
       setError("El área/departamento es requerido.");
       return;
     }
@@ -225,13 +230,27 @@ export default function RequisicionForm({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
           Área/Dpto
-          <input
+          <select
             className="input-field"
-            value={areaDepto}
-            onChange={(e) => setAreaDepto(e.target.value)}
-            placeholder="Ej. Mantenimiento"
-            required
-          />
+            value={areaSeleccion}
+            onChange={(e) => setAreaSeleccion(e.target.value)}
+          >
+            {AREAS_SUGERIDAS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+            <option value={AREA_OTRO}>Otro</option>
+          </select>
+          {areaSeleccion === AREA_OTRO && (
+            <input
+              className="input-field mt-1"
+              placeholder="Especifica el área"
+              value={areaManual}
+              onChange={(e) => setAreaManual(e.target.value)}
+              required
+            />
+          )}
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
           Fecha

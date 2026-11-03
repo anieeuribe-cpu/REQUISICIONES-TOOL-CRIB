@@ -1,5 +1,5 @@
 import type { DataStore } from "@/lib/data/store";
-import { formatFolio, nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
+import { elegirAprobadorCorreos, formatFolio, nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
 import type { NuevaRequisicionInput, Requisicion } from "@/lib/types";
 import { APROBADORES_SEED, CATALOGO_SEED, ROLES_SEED, TIPO_CAMBIO_SEED } from "./seed";
 
@@ -45,7 +45,11 @@ export const mockStore: DataStore = {
     const { valorMXNporUSD } = TIPO_CAMBIO_SEED;
     const total = totalUSD(input.renglones, valorMXNporUSD);
     const nivel = nivelAprobacionPorMonto(total);
-    const aprobador = APROBADORES_SEED.find((a) => a.rol === nivel && a.activo);
+    const aprobadorCorreo = elegirAprobadorCorreos(
+      APROBADORES_SEED.filter((a) => a.activo),
+      nivel,
+      input.areaDepto
+    );
 
     const id = nextId();
     const requisicion: Requisicion = {
@@ -61,7 +65,7 @@ export const mockStore: DataStore = {
       totalUSD: total,
       nivelAprobacion: nivel,
       estado: "Pendiente",
-      aprobadorCorreo: aprobador?.correo,
+      aprobadorCorreo: aprobadorCorreo || undefined,
       creado: new Date().toISOString()
     };
 

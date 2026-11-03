@@ -40,6 +40,8 @@ export interface Aprobador {
   nombreCompleto: string;
   correo: string;
   activo: boolean;
+  /** Área/Departamento al que pertenece este aprobador (ej. "Mantenimiento", "Producción"). Opcional: filas viejas sin esta columna siguen sirviendo como respaldo general para su rol. */
+  area?: string;
 }
 
 export interface TipoCambio {

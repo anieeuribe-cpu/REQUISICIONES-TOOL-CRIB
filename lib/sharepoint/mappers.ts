@@ -57,10 +57,12 @@ export interface AprobadorFields {
   NombreCompleto: string;
   Correo: string;
   Activo: boolean;
+  /** Columna agregada para poder elegir aprobador por Rol + Área (ver lib/data/sharepoint/index.ts#crearRequisicion). Puede no venir en filas viejas. */
+  Area?: string;
 }
 
 export function mapAprobadorFields(f: AprobadorFields): Aprobador {
-  return { rol: f.Rol, nombreCompleto: f.NombreCompleto, correo: f.Correo, activo: f.Activo };
+  return { rol: f.Rol, nombreCompleto: f.NombreCompleto, correo: f.Correo, activo: f.Activo, area: f.Area };
 }
 
 export interface TipoCambioFields {
