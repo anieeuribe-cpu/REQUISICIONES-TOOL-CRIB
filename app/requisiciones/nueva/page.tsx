@@ -1,8 +1,7 @@
 import RequisicionForm from "@/components/RequisicionForm";
-import { dataStore } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
 
-export default async function NuevaRequisicionPage() {
+export default function NuevaRequisicionPage() {
   const usuario = getCurrentUser();
 
   if (usuario?.perfil !== "Captura") {
@@ -17,26 +16,19 @@ export default async function NuevaRequisicionPage() {
     );
   }
 
-  // Se piden aquí, en el servidor, antes de que la pantalla aparezca — para
-  // que cuando se dé "Guardar" ya estén listos sí o sí (ver
-  // RequisicionForm.tsx). Si algo falla (por ejemplo no hay tipo de cambio
-  // vigente marcado en SharePoint), no se tira toda la pantalla: se deja en
-  // null y el formulario los vuelve a pedir desde el navegador como
-  // respaldo.
-  const [tipoCambio, aprobadores] = await Promise.all([
-    dataStore.obtenerTipoCambioVigente().catch(() => null),
-    dataStore.listarAprobadores().catch(() => null)
-  ]);
-
+  // El tipo de cambio y los aprobadores ya NO se piden aquí (en el
+  // servidor, antes de mostrar la pantalla): eso bloqueaba toda la pantalla
+  // ~15-18s esperando 2 llamadas a Power Automate antes de dejar ver ni
+  // siquiera el campo de Nombre. Ahora el formulario los pide él mismo
+  // desde el navegador apenas se monta (ver RequisicionForm.tsx) — la
+  // pantalla aparece al instante, y el botón "Guardar" se queda deshabilitado
+  // hasta que esos datos lleguen, así que no hay ventana de carrera posible
+  // (no puede guardarse sin ellos, nada más que esperar un poco en vez de
+  // caer al camino lento de que el servidor los vuelva a pedir).
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-navy">Nueva requisición</h1>
-      <RequisicionForm
-        nombreInicial={usuario?.nombre ?? ""}
-        noRelojInicial=""
-        tipoCambioInicial={tipoCambio?.valorMXNporUSD ?? null}
-        aprobadoresIniciales={aprobadores}
-      />
+      <RequisicionForm nombreInicial={usuario?.nombre ?? ""} noRelojInicial="" tipoCambioInicial={null} aprobadoresIniciales={null} />
     </div>
   );
 }
