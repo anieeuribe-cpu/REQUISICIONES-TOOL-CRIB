@@ -63,7 +63,14 @@ export interface AprobadorFields {
 }
 
 export function mapAprobadorFields(f: AprobadorFields): Aprobador {
-  return { rol: f.Rol, nombreCompleto: f.NombreCompleto, correo: f.Correo, activo: f.Activo, area: f.Area };
+  // .trim() en Rol: es una columna que se captura a mano en SharePoint
+  // ("Lista Aprobadores") y un espacio de más ("Superintendente ") hace
+  // que no haga match con el enum esperado — igual que el problema ya
+  // conocido con espacios/comas de más en la columna "Estado" (ver
+  // docs/POWER-AUTOMATE-FLOW.md). Se limpia aquí, en la fuente, para que
+  // nunca vuelva a tronar sin importar quién edite la lista después.
+  const rol = (typeof f.Rol === "string" ? f.Rol.trim() : f.Rol) as NivelAprobacion;
+  return { rol, nombreCompleto: f.NombreCompleto, correo: f.Correo, activo: f.Activo, area: f.Area };
 }
 
 export interface TipoCambioFields {
