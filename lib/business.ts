@@ -43,10 +43,22 @@ export function elegirAprobadorCorreos(aprobadores: Aprobador[], nivel: NivelApr
   const areaNormalizada = area.trim().toLowerCase();
   const porNivelYArea = porNivel.filter((a) => a.area && a.area.trim().toLowerCase() === areaNormalizada);
   const candidatos = porNivelYArea.length > 0 ? porNivelYArea : porNivel;
-  return candidatos
-    .map((a) => a.correo.trim())
-    .filter(Boolean)
-    .join(";");
+  // Quita duplicados por correo (comparando sin mayúsculas/minúsculas, pero
+  // conservando el primero tal como viene): si dos aprobadores comparten el
+  // mismo correo (a propósito, como en pruebas, o por una fila repetida que
+  // SharePoint regrese de más alguna vez), no tiene caso mandarlo dos veces
+  // — con que le llegue una sola notificación a ese buzón basta.
+  const vistos = new Set<string>();
+  const correosUnicos: string[] = [];
+  for (const a of candidatos) {
+    const correo = a.correo.trim();
+    const clave = correo.toLowerCase();
+    if (correo && !vistos.has(clave)) {
+      vistos.add(clave);
+      correosUnicos.push(correo);
+    }
+  }
+  return correosUnicos.join(";");
 }
 
 /** Se le suma 999 al ID de SharePoint para que el folio visible empiece en 1000. */
