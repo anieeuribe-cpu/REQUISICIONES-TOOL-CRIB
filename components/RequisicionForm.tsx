@@ -413,8 +413,8 @@ export default function RequisicionForm({
           <p className="text-xs uppercase tracking-wide text-gray-500">Firma requerida</p>
           <p className="text-lg font-semibold text-navy">{nivel ?? "—"}</p>
         </div>
-        <button type="submit" className="btn-primary" disabled={enviando || total == null}>
-          {enviando ? "Guardando…" : "Guardar requisición"}
+        <button type="submit" className="btn-primary" disabled={enviando || total == null || aprobadores == null}>
+          {enviando ? "Guardando…" : total == null || aprobadores == null ? "Cargando datos…" : "Guardar requisición"}
         </button>
       </section>
 
