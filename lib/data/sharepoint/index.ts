@@ -1,4 +1,4 @@
-import { nivelAprobacionPorMonto, parseFolioId, totalUSD } from "@/lib/business";
+import { elegirAprobadorCorreos, nivelAprobacionPorMonto, parseFolioId, totalUSD } from "@/lib/business";
 import type { DataStore } from "@/lib/data/store";
 import { callFlow } from "@/lib/sharepoint/powerAutomateClient";
 import {
@@ -70,18 +70,25 @@ export const sharepointStore: DataStore = {
     // Automate solo tenga que crear los renglones en SharePoint, sin
     // reimplementar reglas de negocio en fórmulas de Power Automate.
     //
-    // El tipo de cambio y la lista completa de aprobadores no dependen uno
-    // del otro, así que se piden en paralelo (en vez de tipo de cambio,
-    // luego aprobador, luego crear — 3 llamadas seguidas a Power Automate,
-    // cada una con su propio tiempo de espera) y el aprobador correcto se
-    // elige en la app una vez que ya se sabe el nivel de aprobación.
-    const [tipoCambio, aprobadores] = await Promise.all([
-      sharepointStore.obtenerTipoCambioVigente(),
-      sharepointStore.listarAprobadores()
-    ]);
+    // El formulario (components/RequisicionForm.tsx) ya pide tipo de cambio
+    // y aprobadores desde que se abre la pantalla (para mostrar el total en
+    // vivo mientras se captura) y los manda aquí — si llegaron, nos
+    // ahorramos una llamada completa a Power Automate justo en el momento
+    // en que más importa la velocidad (guardar). Si no llegaron (el
+    // formulario no alcanzó a cargarlos, o esta llamada viene de otro
+    // lado), se piden igual que antes, en paralelo.
+    const [tipoCambio, aprobadores] =
+      input.tipoCambio && input.aprobadores
+        ? [input.tipoCambio, input.aprobadores]
+        : await Promise.all([sharepointStore.obtenerTipoCambioVigente(), sharepointStore.listarAprobadores()]);
     const total = totalUSD(input.renglones, tipoCambio.valorMXNporUSD);
     const nivel = nivelAprobacionPorMonto(total);
-    const aprobador = aprobadores.find((a) => a.rol === nivel);
+    // Si hay más de un aprobador para ese nivel+área, van todos juntos
+    // separados por ";" — el flujo de aprobación ya soporta mandarlo a
+    // varias personas a la vez (aprueba quien responda primero). Ver
+    // lib/business.ts#elegirAprobadorCorreos para el criterio completo
+    // (incluye el respaldo cuando no hay nadie para esa área exacta).
+    const aprobadorCorreo = elegirAprobadorCorreos(aprobadores, nivel, input.areaDepto);
 
     const { requisicion } = await callFlow<{ requisicion: RequisicionFlowItem }>("requisicionCrear", {
       nombre: input.nombre,
@@ -92,7 +99,7 @@ export const sharepointStore: DataStore = {
       solicitanteCorreo: input.solicitanteCorreo,
       totalUSD: total,
       nivelAprobacion: nivel,
-      aprobadorCorreo: aprobador?.correo ?? "",
+      aprobadorCorreo,
       renglones: input.renglones
     });
     // La creación del encabezado en SharePoint (dentro del flujo) dispara el

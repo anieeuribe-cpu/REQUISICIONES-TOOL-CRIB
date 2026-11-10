@@ -17,13 +17,25 @@ const renglonSchema = z.object({
   capturaManual: z.boolean().default(false)
 });
 
+const aprobadorSchema = z.object({
+  rol: z.enum(["Supervisor", "Superintendente", "Gerente"]),
+  nombreCompleto: z.string(),
+  correo: z.string(),
+  activo: z.boolean()
+});
+
 const nuevaRequisicionSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido."),
   noReloj: z.string().trim().min(1, "El número de reloj es requerido."),
   turno: z.string().trim().min(1, "El turno es requerido."),
   areaDepto: z.string().trim().min(1, "El área/departamento es requerido."),
   fecha: z.string().trim().min(1, "La fecha es requerida."),
-  renglones: z.array(renglonSchema).min(1, "Agrega al menos un renglón.")
+  renglones: z.array(renglonSchema).min(1, "Agrega al menos un renglón."),
+  // Ya cargados por el formulario al abrir la pantalla (ver
+  // components/RequisicionForm.tsx) — si vienen, se evita volver a
+  // pedirlos a Power Automate (ver lib/data/sharepoint/index.ts#crearRequisicion).
+  tipoCambio: z.object({ valorMXNporUSD: z.number() }).nullish(),
+  aprobadores: z.array(aprobadorSchema).nullish()
 });
 
 export async function GET() {

@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import OriginBadge from "./OriginBadge";
 import PartAutocomplete from "./PartAutocomplete";
 import { formatMXN, formatUSD, nivelAprobacionPorMonto, totalUSD } from "@/lib/business";
-import type { Origen, ParteCatalogo, RenglonRequisicion } from "@/lib/types";
+import type { Aprobador, Origen, ParteCatalogo, RenglonRequisicion } from "@/lib/types";
 
 const TURNOS_SUGERIDOS = ["4", "9", "53", "54"];
 const TURNO_OTRO = "Otro";
+
+const AREAS_SUGERIDAS = ["Mantenimiento", "Producción"];
+const AREA_OTRO = "Otro";
 
 interface FilaRenglon extends RenglonRequisicion {
   clientId: string;
@@ -37,28 +40,56 @@ function monedaDeOrigen(origen: Origen) {
 
 export default function RequisicionForm({
   nombreInicial,
-  noRelojInicial
+  noRelojInicial,
+  tipoCambioInicial,
+  aprobadoresIniciales
 }: {
   nombreInicial: string;
   noRelojInicial: string;
+  /**
+   * Ya vienen listos desde el servidor (ver app/requisiciones/nueva/page.tsx),
+   * pedidos ANTES de que esta pantalla siquiera aparezca — así no hay
+   * ninguna espera de red pendiente en el navegador que pueda ganarle a un
+   * clic rápido en "Guardar" (con el fetch desde el cliente sí podía pasar:
+   * si se llenaba el formulario muy rápido, "Guardar" llegaba antes de que
+   * terminaran esas dos peticiones, y el servidor caía otra vez al camino
+   * lento de volver a pedirlas él mismo).
+   */
+  tipoCambioInicial: number | null;
+  aprobadoresIniciales: Aprobador[] | null;
 }) {
   const router = useRouter();
   const [nombre, setNombre] = useState(nombreInicial);
   const [noReloj, setNoReloj] = useState(noRelojInicial);
   const [turnoSeleccion, setTurnoSeleccion] = useState(TURNOS_SUGERIDOS[0]!);
   const [turnoManual, setTurnoManual] = useState("");
-  const [areaDepto, setAreaDepto] = useState("");
+  const [areaSeleccion, setAreaSeleccion] = useState(AREAS_SUGERIDAS[0]!);
+  const [areaManual, setAreaManual] = useState("");
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [filas, setFilas] = useState<FilaRenglon[]>([filaVacia()]);
-  const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(null);
+  const [valorMXNporUSD, setValorMXNporUSD] = useState<number | null>(tipoCambioInicial);
+  const [aprobadores, setAprobadores] = useState<Aprobador[] | null>(aprobadoresIniciales);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  // Red de seguridad: si por lo que sea no llegaron del servidor (ver
+  // arriba), se piden desde el navegador como respaldo — mejor tarde que
+  // nunca, aunque en el caso normal esto ni se ejecuta porque los estados
+  // ya traen valor desde el primer render.
   useEffect(() => {
-    fetch("/api/tipo-cambio")
-      .then((r) => r.json())
-      .then((d) => setValorMXNporUSD(d.tipoCambio?.valorMXNporUSD ?? null))
-      .catch(() => setValorMXNporUSD(null));
+    if (valorMXNporUSD == null) {
+      fetch("/api/tipo-cambio")
+        .then((r) => r.json())
+        .then((d) => setValorMXNporUSD(d.tipoCambio?.valorMXNporUSD ?? null))
+        .catch(() => setValorMXNporUSD(null));
+    }
+    if (aprobadores == null) {
+      fetch("/api/aprobadores")
+        .then((r) => r.json())
+        .then((d) => setAprobadores(d.aprobadores ?? null))
+        .catch(() => setAprobadores(null));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function actualizarFila(clientId: string, cambios: Partial<FilaRenglon>) {
@@ -109,6 +140,7 @@ export default function RequisicionForm({
 
   const nivel = total != null ? nivelAprobacionPorMonto(total) : null;
   const turno = turnoSeleccion === TURNO_OTRO ? turnoManual.trim() : turnoSeleccion;
+  const areaDepto = areaSeleccion === AREA_OTRO ? areaManual.trim() : areaSeleccion;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,7 +154,7 @@ export default function RequisicionForm({
       setError("Completa descripción y localidad en los renglones capturados manualmente.");
       return;
     }
-    if (!areaDepto.trim()) {
+    if (!areaDepto) {
       setError("El área/departamento es requerido.");
       return;
     }
@@ -142,7 +174,13 @@ export default function RequisicionForm({
           turno,
           areaDepto,
           fecha,
-          renglones: filas.map(({ clientId, manual, ...r }) => r)
+          renglones: filas.map(({ clientId, manual, ...r }) => r),
+          // Ya se tenían cargados desde que se abrió la pantalla (ver el
+          // useEffect de arriba) — se mandan para que el servidor no tenga
+          // que volver a pedirlos. Si por lo que sea no cargaron a tiempo,
+          // se manda null y el servidor los pide él mismo como antes.
+          tipoCambio: valorMXNporUSD != null ? { valorMXNporUSD } : null,
+          aprobadores
         })
       });
       const data = await res.json();
@@ -192,13 +230,27 @@ export default function RequisicionForm({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
           Área/Dpto
-          <input
+          <select
             className="input-field"
-            value={areaDepto}
-            onChange={(e) => setAreaDepto(e.target.value)}
-            placeholder="Ej. Mantenimiento"
-            required
-          />
+            value={areaSeleccion}
+            onChange={(e) => setAreaSeleccion(e.target.value)}
+          >
+            {AREAS_SUGERIDAS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+            <option value={AREA_OTRO}>Otro</option>
+          </select>
+          {areaSeleccion === AREA_OTRO && (
+            <input
+              className="input-field mt-1"
+              placeholder="Especifica el área"
+              value={areaManual}
+              onChange={(e) => setAreaManual(e.target.value)}
+              required
+            />
+          )}
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
           Fecha

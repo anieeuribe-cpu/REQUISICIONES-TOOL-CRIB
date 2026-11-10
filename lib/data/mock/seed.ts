@@ -34,10 +34,17 @@ function buildCatalog(): ParteCatalogo[] {
 
 export const CATALOGO_SEED: ParteCatalogo[] = buildCatalog();
 
+// Refleja la estructura real (ver conversación): dos Supervisores en
+// Mantenimiento (cualquiera puede aprobar), y combinaciones nivel+área que
+// a propósito NO existen todavía (Mantenimiento+Gerente, Producción+
+// Superintendente) para poder probar el respaldo de
+// lib/business.ts#elegirAprobadorCorreos.
 export const APROBADORES_SEED: Aprobador[] = [
-  { rol: "Supervisor", nombreCompleto: "Laura Méndez", correo: "laura.mendez@empresa.com", activo: true },
-  { rol: "Superintendente", nombreCompleto: "Jorge Salinas", correo: "jorge.salinas@empresa.com", activo: true },
-  { rol: "Gerente", nombreCompleto: "Patricia Vega", correo: "patricia.vega@empresa.com", activo: true }
+  { rol: "Supervisor", nombreCompleto: "Jorge L. Valles", correo: "jorge.valles@empresa.com", activo: true, area: "Mantenimiento" },
+  { rol: "Supervisor", nombreCompleto: "Juan M. Ogaz", correo: "juan.ogaz@empresa.com", activo: true, area: "Mantenimiento" },
+  { rol: "Supervisor", nombreCompleto: "Sergio A. Gonzalez", correo: "sergio.gonzalez@empresa.com", activo: true, area: "Producción" },
+  { rol: "Superintendente", nombreCompleto: "Genaro Lopez", correo: "genaro.lopez@empresa.com", activo: true, area: "Mantenimiento" },
+  { rol: "Gerente", nombreCompleto: "Manuel Dominguez", correo: "manuel.dominguez@empresa.com", activo: true, area: "Producción" }
 ];
 
 export const TIPO_CAMBIO_SEED: TipoCambio = {
