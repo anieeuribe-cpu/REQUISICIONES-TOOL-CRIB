@@ -56,7 +56,8 @@ export interface AprobadorFields {
   Rol: NivelAprobacion;
   NombreCompleto: string;
   Correo: string;
-  Activo: boolean;
+  /** La lista real "Lista Aprobadores" no tiene esta columna (el flujo de Power Automate no la selecciona) — siempre llega undefined desde SharePoint. */
+  Activo?: boolean;
   /** Columna agregada para poder elegir aprobador por Rol + Área (ver lib/data/sharepoint/index.ts#crearRequisicion). Puede no venir en filas viejas. */
   Area?: string;
 }

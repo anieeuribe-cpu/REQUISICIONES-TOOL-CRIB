@@ -39,7 +39,8 @@ export interface Aprobador {
   rol: NivelAprobacion;
   nombreCompleto: string;
   correo: string;
-  activo: boolean;
+  /** La lista real "Lista Aprobadores" en SharePoint no tiene esta columna — llega undefined desde ahí. Solo lo usa el modo mock (donde el seed sí lo define). */
+  activo?: boolean;
   /** Área/Departamento al que pertenece este aprobador (ej. "Mantenimiento", "Producción"). Opcional: filas viejas sin esta columna siguen sirviendo como respaldo general para su rol. */
   area?: string;
 }

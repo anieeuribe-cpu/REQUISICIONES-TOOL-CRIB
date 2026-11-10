@@ -21,7 +21,12 @@ const aprobadorSchema = z.object({
   rol: z.enum(["Supervisor", "Superintendente", "Gerente"]),
   nombreCompleto: z.string(),
   correo: z.string(),
-  activo: z.boolean()
+  // Opcional: la lista real "Lista Aprobadores" en SharePoint no tiene
+  // columna "Activo" (nunca la tuvo), así que este dato nunca llega desde
+  // ahí — y nada en la lógica de negocio lo usa para filtrar. Exigirlo
+  // aquí solo rechazaba toda requisición real con el error "Required
+  // (campo: aprobadores.0.activo)".
+  activo: z.boolean().optional()
 });
 
 const nuevaRequisicionSchema = z.object({
