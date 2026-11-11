@@ -25,10 +25,13 @@ export default function DevAprobarPanel({ folio, aprobador }: { folio: string; a
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo registrar la decisión.");
+      // Mismo ajuste que SurtirButton/OrigenEditable: no se reactivan los
+      // botones aquí, se quedan deshabilitados hasta que router.refresh()
+      // (que no avisa cuándo termina) traiga el estado ya actualizado y
+      // este panel desaparezca solo (deja de ser "Pendiente").
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
-    } finally {
       setEnviando(false);
     }
   }
