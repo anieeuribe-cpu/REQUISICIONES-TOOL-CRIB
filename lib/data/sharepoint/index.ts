@@ -149,10 +149,6 @@ export const sharepointStore: DataStore = {
     return mapRequisicionFlowItem(requisicion);
   },
 
-  async editarOrigenRenglon(renglonId, origen) {
-    await callFlow<{ ok: boolean }>("renglonEditarOrigen", { id: renglonId, origen });
-  },
-
   async obtenerRol(correo) {
     const { rol } = await callFlow<{ rol: RolFields | null }>("rolObtener", { correo });
     return rol ? mapRolFields(rol) : null;
