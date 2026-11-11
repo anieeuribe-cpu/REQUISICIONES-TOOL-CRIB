@@ -93,17 +93,6 @@ export const mockStore: DataStore = {
     return req;
   },
 
-  async editarOrigenRenglon(renglonId, origen) {
-    for (const req of g.__toolcribRequisiciones!) {
-      const renglon = req.renglones.find((r) => r.id === renglonId);
-      if (renglon) {
-        renglon.origen = origen;
-        return;
-      }
-    }
-    throw new Error(`Renglón ${renglonId} no encontrado.`);
-  },
-
   async obtenerRol(correo) {
     return ROLES_SEED.find((u) => u.correo.toLowerCase() === correo.toLowerCase()) ?? null;
   }

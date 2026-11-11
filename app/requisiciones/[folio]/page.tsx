@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import DevAprobarPanel from "@/components/DevAprobarPanel";
-import OrigenEditable from "@/components/OrigenEditable";
 import OriginBadge from "@/components/OriginBadge";
 import StatusBadge from "@/components/StatusBadge";
 import SurtirButton from "@/components/SurtirButton";
@@ -25,7 +24,6 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
   if (!requisicion) notFound();
 
   const esModoMock = (process.env.DATA_MODE ?? "mock") === "mock";
-  const puedeEditarOrigen = usuario?.perfil === "ToolCrib";
 
   return (
     <div className="flex flex-col gap-6">
@@ -69,11 +67,7 @@ export default async function DetalleRequisicionPage({ params }: { params: { fol
                 </td>
                 <td className="py-2 pr-2">{r.descripcion}</td>
                 <td className="py-2 pr-2">
-                  {puedeEditarOrigen && r.id ? (
-                    <OrigenEditable folio={requisicion.folio} renglonId={r.id} origen={r.origen} />
-                  ) : (
-                    <OriginBadge origen={r.origen} />
-                  )}
+                  <OriginBadge origen={r.origen} />
                 </td>
                 <td className="py-2 pr-2">{r.cantidad}</td>
                 <td className="py-2 pr-2 whitespace-nowrap">
